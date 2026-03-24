@@ -1,0 +1,43 @@
+name: Sync poll results
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Fetch poll reactions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -s \
+            'https://giscus.app/api/discussions?repo=VooDisss/opencode-privacy-fix&term=1&number=1&category=&strict=false&first=1' \
+            | jq '{
+              rocket: .discussion.reactions.ROCKET.count,
+              thumbs_up: .discussion.reactions.THUMBS_UP.count,
+              eyes: .discussion.reactions.EYES.count,
+              confused: .discussion.reactions.CONFUSED.count,
+              thumbs_down: .discussion.reactions.THUMBS_DOWN.count,
+              total: .discussion.reactionCount,
+              updated: now | todate
+            }' > poll.json
+          cat poll.json
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add poll.json
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Update poll results [automated]"
+          git push
