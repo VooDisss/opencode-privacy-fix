@@ -226,7 +226,8 @@ p { margin: 0.5rem 0; }
   </div>
 
   <div class="callout danger" style="margin:1rem 0;">
-    <strong>OpenCode's privacy stance:</strong> No privacy policy, no telemetry disclosure, and no network documentation have been published. Some disable flags appear in the CLI docs but with <strong>zero privacy context</strong> — descriptions like "Disable automatic update checks" without mentioning it contacts <code>opencode.ai</code> and leaks your IP and operating system. <code>OPENCODE_DISABLE_SHARE</code> is missing from docs entirely. 7 community issues and 12 community PRs have been filed over 3+ months — <strong>zero merged</strong>. A maintainer commented on PR <a href="https://github.com/anomalyco/opencode/pull/18235">#18235</a> (Mar 20, 2026): <em>"We ofc need to ship something with this shape, internally we talked about some approaches briefly"</em> — no action since. The two most critical concerns (<code>app.opencode.ai</code> proxy, <code>api.opencode.ai</code> GitHub calls) have no disable flag at all. Multiple connections also leak your <strong>operating system</strong> via User-Agent headers and platform-specific requests.
+    <strong>OpenCode's privacy stance:</strong> No privacy policy, no telemetry disclosure, and no network documentation have been published. Some disable flags appear in the CLI docs but with <strong>zero privacy context</strong> — descriptions like "Disable automatic update checks" without mentioning it contacts <code>opencode.ai</code> and leaks your IP and operating system. <code>OPENCODE_DISABLE_SHARE</code> is missing from docs entirely. 7 community issues and 12 community PRs have been filed over 3+ months — <strong>zero merged</strong>. A maintainer commented on PR <a href="https://github.com/anomalyco/opencode/pull/18235">#18235</a> (Mar 20, 2026): <em>"We ofc need to ship something with this shape, internally we talked about some approaches briefly"</em> — no action since. The two most critical concerns (<code>app.opencode.ai</code> proxy, <code>api.opencode.ai</code> GitHub calls) have no disable flag at all. The <code>app.opencode.ai</code> proxy and auto-update endpoints also leak your <strong>operating system</strong> via User-Agent headers and platform-specific requests.
+    <br><br><strong>Note:</strong> PostHog (<code>us.i.posthog.com</code>) and Honeycomb (<code>api.honeycomb.io</code>) references exist in the repo but are in <code>script/stats.ts</code> (a CI build script) and <code>packages/console/</code> (cloud dashboard) respectively — <strong>not in the opencode CLI binary</strong>.
   </div>
 
   <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.3rem;"><strong style="color:var(--text);">PR resolution bar</strong> — of 12 community PRs addressing privacy concerns:</p>
@@ -419,7 +420,7 @@ renderCmd();
 <h2 id="what">What it does</h2>
 <div class="callout tip"><strong>Tip:</strong> Two things happen when you run <code>install</code>. Both persist across reboots. Both are fully reversible with <code>uninstall</code>.</div>
 <ol>
-  <li><strong>Hosts file</strong> — blocks 7 telemetry domains at OS level</li>
+  <li><strong>Hosts file</strong> — blocks 5 telemetry domains at OS level</li>
   <li><strong>Environment variables</strong> — sets 3 flags permanently in your shell profile (Linux) or User Environment (Windows)</li>
 </ol>
 <p>No wrappers, no aliases. You keep running <code>opencode</code> exactly as before.</p>
@@ -434,11 +435,9 @@ renderCmd();
 127.0.0.1 opncd.ai
 127.0.0.1 api.opencode.ai
 127.0.0.1 opencode.ai
-127.0.0.1 us.i.posthog.com
-127.0.0.1 api.honeycomb.io
 # &lt;&lt;&lt; opencode-privacy-block END &lt;&lt;&lt;</code></pre>
     <details class="L2">
-      <summary>What each domain does (click to expand all 7)</summary>
+      <summary>What each domain does (click to expand all 5)</summary>
       <div class="content">
         <details class="L3">
           <summary><code>app.opencode.ai</code> — Web UI catch-all proxy <span class="badge red">NO DISABLE FLAG</span></summary>
@@ -530,21 +529,12 @@ Bus.subscribe(Session.Event.Diff, async (evt) =&gt; { await sync(...) })</code><
           </div>
         </details>
         <details class="L3">
-          <summary><code>us.i.posthog.com</code> — PostHog analytics <span class="badge red">NO DISABLE FLAG</span></summary>
+          <summary><code>us.i.posthog.com</code> and <code>api.honeycomb.io</code> — <strong>NOT in the CLI binary</strong></summary>
           <div class="content">
-            <p><strong>What is PostHog:</strong> A product analytics platform that tracks how users interact with software. Companies use it to see which features are popular, where users drop off, and how the product is being used.</p>
-            <p><strong>When it fires:</strong> During normal usage — every time you open OpenCode and interact with it.</p>
-            <p><strong>What is sent:</strong> Which features you use and how often, what buttons/commands you trigger, how long your sessions last, your IP address (which reveals your approximate location), your browser/OS information, and a unique identifier that ties all your activity together over time.</p>
-            <p><strong>Why it matters:</strong> There is no flag to disable this. OpenCode does not inform you that this data collection is happening, and there is no opt-out mechanism in the application itself.</p>
-          </div>
-        </details>
-        <details class="L3">
-          <summary><code>api.honeycomb.io</code> — Honeycomb telemetry <span class="badge red">NO DISABLE FLAG</span></summary>
-          <div class="content">
-            <p><strong>What is Honeycomb:</strong> An observability platform that collects detailed performance traces — records of what your application did, how long each step took, and what happened when things went wrong.</p>
-            <p><strong>When it fires:</strong> During normal usage — continuously in the background while OpenCode is running.</p>
-            <p><strong>What is sent:</strong> Detailed timing traces of internal operations (how long tool calls, LLM requests, and file operations take), error messages and stack traces when something fails, your IP address (which reveals your approximate geographic location), and metadata about your environment (OS, runtime version).</p>
-            <p><strong>Why it matters:</strong> There is no flag to disable this. The traces may contain information about your project structure (file paths in error messages) and your workflow patterns. Like PostHog, this runs silently with no user notification or opt-out.</p>
+            <p><strong>Correction:</strong> PostHog and Honeycomb references exist in the OpenCode repository, but they are <strong>not part of the CLI/TUI binary</strong> that users run.</p>
+            <p><code>us.i.posthog.com</code> appears in <code>script/stats.ts</code> — a standalone CI build script that aggregates download stats. It requires a <code>POSTHOG_KEY</code> env var and is run by developers in CI, not by users.</p>
+            <p><code>api.honeycomb.io</code> appears in <code>packages/console/function/src/log-processor.ts</code> — part of the cloud console web app (their dashboard), not the CLI. It requires a server-side <code>HONEYCOMB_API_KEY</code>.</p>
+            <p>Neither of these endpoints is contacted when you run <code>opencode</code> on your machine. They are not blocked by this fix because they don't need to be.</p>
           </div>
         </details>
       </div>
@@ -586,7 +576,7 @@ OPENCODE_DISABLE_MODELS_FETCH=true</code></pre>
 
 <hr>
 <h2 id="why">Why this exists</h2>
-<p>OpenCode contacts 7+ undisclosed external domains during normal use. 7 issues and 12 PRs have been filed by the community over 3+ months — zero merged. This page documents every concern with source code evidence and provides a workaround. See the <a href="https://www.reddit.com/r/LocalLLaMA/comments/1rv690j/opencode_concerns_not_truely_local/">original Reddit discussion</a>.</p>
+<p>The OpenCode CLI binary contacts 5 external domains during normal use, none disclosed in a privacy policy. 7 issues and 12 PRs have been filed by the community over 3+ months — zero merged. This page documents every concern with source code evidence and provides a workaround. See the <a href="https://www.reddit.com/r/LocalLLaMA/comments/1rv690j/opencode_concerns_not_truely_local/">original Reddit discussion</a>.</p>
 
 <hr>
 <h2 id="poll">Community Poll</h2>
