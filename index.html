@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>opencode-privacy-fix</title>
+<title>OpenCode Network Guide</title>
 <style>
 :root {
   --bg: #0d1117; --surface: #161b22; --border: #30363d;
@@ -185,68 +185,54 @@ p { margin: 0.5rem 0; }
 </style>
 </head>
 <body>
-<h1 style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">opencode-privacy-fix <a href="https://github.com/VooDisss/opencode-privacy-fix" style="font-size:0.7em;font-weight:400;color:var(--muted);border:1px solid var(--border);padding:0.2rem 0.6rem;border-radius:4px;text-decoration:none;">GitHub repo ↗</a></h1>
+<h1 style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">OpenCode Network Guide <a href="https://github.com/VooDisss/opencode-privacy-fix" style="font-size:0.7em;font-weight:400;color:var(--muted);border:1px solid var(--border);padding:0.2rem 0.6rem;border-radius:4px;text-decoration:none;">GitHub repo ↗</a></h1>
 
-<div class="banner">
-  <strong>Important:</strong> Blocks all undocumented outbound connections in <a href="https://github.com/anomalyco/opencode">OpenCode</a>. Run once, use <code>opencode</code> as normal. Nothing changes about how you launch or use it.
+<div class="callout note" style="margin:1rem 0;">
+  <strong>What this page is:</strong> An informational guide to <a href="https://github.com/anomalyco/opencode">OpenCode</a>'s outbound network connections — what the CLI binary contacts, when, and how to control it. OpenCode is an excellent open-source agentic coding tool. This page is not a security alert — it's a reference for users who want to understand the network behavior. See OpenCode's official <a href="https://opencode.ai/legal/privacy-policy">Privacy Policy</a> and <a href="https://opencode.ai/docs/cli">CLI docs</a>.
+</div>
+
+<div class="callout danger" style="margin:0.5rem 0;">
+  <strong>Corrections (March 25, 2026):</strong> An earlier version of this page incorrectly claimed OpenCode had no privacy policy (it does), that PostHog and Honeycomb were in the CLI binary (they're not — they're in CI scripts and the cloud console), and framed opt-in features as undisclosed concerns. These errors have been corrected below. Apologies to the OpenCode team.
 </div>
 
 <div class="toc">
-  <a href="#tracker">Privacy Tracker</a>
-  <a href="#solution">Proposed Solution</a>
-  <a href="#what">What it does</a>
-  <a href="#why">Why this exists</a>
-  <a href="#poll">Poll</a>
+  <a href="#connections">Network Connections</a>
+  <a href="#flags">Official Disable Flags</a>
+  <a href="#issues">Related Issues &amp; PRs</a>
+  <a href="#poll">Community Poll</a>
   <a href="#discussion">Discussion</a>
 </div>
 
 <hr>
 
-<div class="tracker" id="tracker">
-  <h2>OpenCode Privacy Tracker</h2>
-  <p style="color:var(--muted);font-size:0.9rem;margin:0.3rem 0 0.8rem;">Community-reported privacy issues and fix attempts. Audited against OpenCode <a href="https://github.com/anomalyco/opencode/releases/tag/v1.3.0">v1.3.0</a> (<a href="https://github.com/anomalyco/opencode/commit/34f43fff89d14c72aada06e0dc1d9228ec4d667d"><code>34f43ff</code></a>) on March 24, 2026.</p>
+<div class="tracker" id="connections">
+  <h2>OpenCode Network Connections</h2>
+  <p style="color:var(--muted);font-size:0.9rem;margin:0.3rem 0 0.8rem;">What the CLI binary contacts, when, and how to control it. Based on source code review of OpenCode <a href="https://github.com/anomalyco/opencode/releases/tag/v1.3.0">v1.3.0</a> (<a href="https://github.com/anomalyco/opencode/commit/34f43fff89d14c72aada06e0dc1d9228ec4d667d"><code>34f43ff</code></a>). See the official <a href="https://opencode.ai/legal/privacy-policy">Privacy Policy</a>.</p>
 
-  <div class="scorecard">
-    <div class="score-item">
-      <div class="score-num red">7</div>
-      <div class="score-label">Issues open</div>
-    </div>
-    <div class="score-item">
-      <div class="score-num red">12</div>
-      <div class="score-label">Community PRs</div>
-    </div>
-    <div class="score-item">
-      <div class="score-num green">0</div>
-      <div class="score-label">PRs merged</div>
-    </div>
-    <div class="score-item">
-      <div class="score-num orange">3+</div>
-      <div class="score-label">Months unresolved</div>
-    </div>
+  <table>
+    <thead><tr><th>Domain</th><th>When it fires</th><th>Opt-in?</th><th>Disable flag</th><th>Details</th></tr></thead>
+    <tbody>
+      <tr><td><code>app.opencode.ai</code></td><td>Web UI page loads (not TUI)</td><td>Web UI is experimental</td><td>Not yet (devs plan to bundle it)</td><td><button class="info-btn" onclick="openModal('A')">Learn more ↗</button></td></tr>
+      <tr><td><code>api.opencode.ai</code></td><td><code>opencode github</code> command</td><td><strong>Yes</strong></td><td>No</td><td><button class="info-btn" onclick="openModal('G')">Learn more ↗</button></td></tr>
+      <tr><td><code>opencode.ai</code></td><td>Auto-update check</td><td>No</td><td><strong>Yes</strong> — <code>OPENCODE_DISABLE_AUTOUPDATE</code></td><td><button class="info-btn" onclick="openModal('F')">Learn more ↗</button></td></tr>
+      <tr><td><code>opncd.ai</code></td><td>Session sharing</td><td><strong>Yes</strong> — must explicitly share or set <code>"share": "auto"</code></td><td><strong>Yes</strong> — <code>OPENCODE_DISABLE_SHARE</code></td><td><button class="info-btn" onclick="openModal('D')">Learn more ↗</button></td></tr>
+      <tr><td><code>models.dev</code></td><td>Startup (only if local cache + snapshot fail)</td><td>No</td><td><strong>Yes</strong> — <code>OPENCODE_DISABLE_MODELS_FETCH</code></td><td><button class="info-btn" onclick="openModal('C')">Learn more ↗</button></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout tip" style="margin:1rem 0;">
+    <strong>Your prompts are NOT sent through the web UI proxy.</strong> The <code>app.opencode.ai</code> proxy only handles web UI assets (HTML, JS, CSS). Prompts and LLM responses are handled by local API routes. Session sharing (<code>opncd.ai</code>) can send session data, but only when you explicitly opt in.
   </div>
 
-  <div class="callout danger" style="margin:1rem 0;">
-    <strong>OpenCode's privacy stance:</strong> No privacy policy, no telemetry disclosure, and no network documentation have been published. Some disable flags appear in the CLI docs but with <strong>zero privacy context</strong> — descriptions like "Disable automatic update checks" without mentioning it contacts <code>opencode.ai</code> and leaks your IP and operating system. <code>OPENCODE_DISABLE_SHARE</code> is missing from docs entirely. 7 community issues and 12 community PRs have been filed over 3+ months — <strong>zero merged</strong>. A maintainer commented on PR <a href="https://github.com/anomalyco/opencode/pull/18235">#18235</a> (Mar 20, 2026): <em>"We ofc need to ship something with this shape, internally we talked about some approaches briefly"</em> — no action since. The two most critical concerns (<code>app.opencode.ai</code> proxy, <code>api.opencode.ai</code> GitHub calls) have no disable flag at all. The <code>app.opencode.ai</code> proxy and auto-update endpoints also leak your <strong>operating system</strong> via User-Agent headers and platform-specific requests.
-    <br><br><strong>Note:</strong> PostHog (<code>us.i.posthog.com</code>) and Honeycomb (<code>api.honeycomb.io</code>) references exist in the repo but are in <code>script/stats.ts</code> (a CI build script) and <code>packages/console/</code> (cloud dashboard) respectively — <strong>not in the opencode CLI binary</strong>.
+  <div class="callout note" style="margin:1rem 0;">
+    <strong>Not in the CLI binary:</strong> PostHog (<code>us.i.posthog.com</code>) and Honeycomb (<code>api.honeycomb.io</code>) references exist in the repo but are in <code>script/stats.ts</code> (a CI build script) and <code>packages/console/</code> (cloud dashboard). They do <strong>not</strong> fire when you use the OpenCode CLI or TUI.
   </div>
 
-  <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.3rem;"><strong style="color:var(--text);">PR resolution bar</strong> — of 12 community PRs addressing privacy concerns:</p>
-  <div class="stance-bar">
-    <div class="seg red" style="width:33%" title="5 open, no review"></div>
-    <div class="seg orange" style="width:50%" title="6 closed by bot"></div>
-    <div class="seg muted" style="width:8.3%" title="1 closed as duplicate"></div>
-    <div class="seg green" style="width:0%" title="0 merged"></div>
-  </div>
-  <div class="stance-legend">
-    <span class="l-open">Open, unreviewed (5)</span>
-    <span class="l-closed">Auto-closed by bot (6)</span>
-    <span class="l-dup">Closed other (1)</span>
-    <span class="l-merged">Merged (0)</span>
-  </div>
+  <h3 id="issues">Related Issues &amp; PRs</h3>
+  <p style="color:var(--muted);font-size:0.9rem;margin:0.5rem 0;">Community-filed issues and PRs related to network behavior. The main open item is bundling the web UI into the binary (experimental, in progress).</p>
 
-  <!-- Concern A -->
   <div class="concern-group">
-    <div class="concern-header"><span class="dot red"></span> Concern A: Web UI silently proxies all requests to <code>app.opencode.ai</code> — <span class="badge red">NO DISABLE FLAG</span> <button class="info-btn" onclick="openModal('A')" title="View full explanation">Learn more ↗</button></div>
+    <div class="concern-header">Web UI proxy (<code>app.opencode.ai</code>) — experimental, devs plan to bundle <button class="info-btn" onclick="openModal('A')" title="View full explanation">Learn more ↗</button></div>
     <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/issues/6352">#6352</a></span><span class="title">Allow overriding web client path / bundle with binary</span><span class="pill open">issue · open</span><span class="assignee"><a href="https://github.com/thdxr">@thdxr</a></span></summary><div class="card-body"><p>First issue to raise the privacy concern (Dec 29, 2025). Project paths are leaked to <code>app.opencode.ai</code> through the catch-all proxy. Requests either bundling the web UI into the binary or adding a config override for the proxy URL. Also raises a stability concern: the CDN-hosted UI can change between binary releases, causing version mismatches.</p><div class="card-meta"><span><span class="label">Created:</span> 2025-12-29</span><span><span class="label">Created by:</span> <a href="https://github.com/paperclover">@paperclover</a></span><span><span class="label">Assigned to:</span> <a href="https://github.com/thdxr">@thdxr</a></span><span>6 reactions</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/issues/6352">View on GitHub →</a></div></details>
 
     <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/issues/8549">#8549</a></span><span class="title">Web doesn't work without internet (corporate)</span><span class="pill open">issue · open</span><span class="assignee"><a href="https://github.com/adamdotdevin">@adamdotdevin</a></span></summary><div class="card-body"><p>Main tracking issue for the offline web UI problem. The web UI fails completely in corporate/air-gapped environments because it depends on <code>app.opencode.ai</code> for all frontend assets. 16 reactions and 10 comments — the most-engaged privacy issue. Multiple community workaround commits linked in the comments (proAlexandr, tardyp).</p><div class="card-meta"><span><span class="label">Created:</span> 2026-1-14</span><span><span class="label">Created by:</span> <a href="https://github.com/IceWreck">@IceWreck</a></span><span><span class="label">Assigned to:</span> <a href="https://github.com/adamdotdevin">@adamdotdevin</a></span><span>16 reactions · 10 comments</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/issues/8549">View on GitHub →</a></div></details>
@@ -274,40 +260,54 @@ p { margin: 0.5rem 0; }
     <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/pull/18506">#18506—#18522</a></span><span class="title">PR: Offline web static serve (DroganC — 6 attempts)</span><span class="pill closed">5 bot closed · 1 open</span><span class="assignee">by @DroganC</span></summary><div class="card-body"><p>DroganC attempted to submit the same offline web serving fix <strong>6 times</strong>. The approach adds an <code>OPENCODE_APP_DIST</code> env var to serve web assets from <code>packages/app/dist</code> locally, plus an <code>OFFLINE_WEB.md</code> documentation file. 138 additions, 12 files changed.</p><p><strong>Why 5 were closed:</strong> The repo has an automated compliance bot that auto-closes PRs within ~2 hours if they don't meet template requirements (<code>needs:title</code>, <code>needs:compliance</code>). PRs <a href="https://github.com/anomalyco/opencode/pull/18506">#18506</a>, <a href="https://github.com/anomalyco/opencode/pull/18508">#18508</a>, <a href="https://github.com/anomalyco/opencode/pull/18510">#18510</a>, <a href="https://github.com/anomalyco/opencode/pull/18520">#18520</a>, and <a href="https://github.com/anomalyco/opencode/pull/18521">#18521</a> were all closed by this bot. The 6th attempt (<a href="https://github.com/anomalyco/opencode/pull/18522">#18522</a>) finally passed compliance and remains open with review requested from <a href="https://github.com/adamdotdevin">@adamdotdevin</a>.</p><div class="card-meta"><span><span class="label">Created:</span> 2026-3-22</span><span><span class="label">Created by:</span> @DroganC</span><span><span class="label">Assigned to:</span> —</span><span><a href="https://github.com/anomalyco/opencode/pull/18506">#18506</a> closed (bot)</span><span><a href="https://github.com/anomalyco/opencode/pull/18508">#18508</a> closed (bot)</span><span><a href="https://github.com/anomalyco/opencode/pull/18510">#18510</a> closed (bot)</span><span><a href="https://github.com/anomalyco/opencode/pull/18520">#18520</a> closed (bot)</span><span><a href="https://github.com/anomalyco/opencode/pull/18521">#18521</a> closed (bot)</span><span><strong><a href="https://github.com/anomalyco/opencode/pull/18522">#18522</a> open</strong></span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/pull/18522">View #18522 on GitHub →</a></div></details>
   </div>
 
-  <!-- Concern B -->
   <div class="concern-group">
-    <div class="concern-header"><span class="dot red"></span> Concern B: No single "offline mode" to disable all outbound connections — <span class="badge red">NO DISABLE FLAG</span> <button class="info-btn" onclick="openModal('B')" title="View full explanation">Learn more ↗</button></div>
+    <div class="concern-header">Offline mode request <button class="info-btn" onclick="openModal('B')" title="View full explanation">Learn more ↗</button></div>
     <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/pull/18235">#18235</a></span><span class="title">PR: Add offline mode (--offline)</span><span class="pill open">pr · open</span><span class="assignee">by @dgruzd</span></summary><div class="card-body"><p>Adds <code>OPENCODE_OFFLINE=true</code> / <code>--offline</code> CLI flag as a single kill switch for all non-essential outbound connections. When enabled: disables auto-update, disables session sharing, web UI proxy returns 503. 233 additions, 5 tests.</p><blockquote>Maintainer <a href="https://github.com/rekram1-node">@rekram1-node</a> (Mar 20, 2026): "We ofc need to ship something with this shape, internally we talked about some approaches briefly, ill need to sync back w/ them to see what they think is best next week"</blockquote><p>No follow-up action since that comment.</p><div class="card-meta"><span><span class="label">Created:</span> 2026-3-20</span><span><span class="label">Created by:</span> @dgruzd</span><span><span class="label">Assigned to:</span> —</span><span>233 additions · 5 tests · Merge conflicts · Maintainer acknowledged</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/pull/18235">View on GitHub →</a></div></details>
   </div>
 
   <div class="concern-group">
-    <div class="concern-header"><span class="dot orange"></span> Concern C: Model catalog fetched from <code>models.dev</code>, leaking your IP and OpenCode version — <span class="badge green">HAS FLAG</span> <button class="info-btn" onclick="openModal('C')" title="View full explanation">Learn more ↗</button></div>
+    <div class="concern-header">Model catalog fetch (<code>models.dev</code>) — <span class="badge green">has disable flag</span> <button class="info-btn" onclick="openModal('C')" title="View full explanation">Learn more ↗</button></div>
     <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/issues/18638">#18638</a></span><span class="title">Offline deployment blocked by models.dev requests</span><span class="pill open">issue · open</span><span class="assignee">—</span></summary><div class="card-body"><p>Docker deployment (<code>ghcr.io/anomalyco/opencode:1.1.53</code>) keeps requesting <code>models.dev</code>, blocking the web interface in offline environments. The <code>OPENCODE_DISABLE_MODELS_FETCH</code> flag exists but is undocumented — users don't know it's available. The flag is also only checked <em>after</em> local cache and bundled snapshot both fail, so the fetch can happen before the flag takes effect.</p><div class="card-meta"><span><span class="label">Created:</span> 2026-3-22</span><span><span class="label">Created by:</span> <a href="https://github.com/Leekinxun">@Leekinxun</a></span><span><span class="label">Assigned to:</span> —</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/issues/18638">View on GitHub →</a></div></details>
   </div>
 
   <div class="concern-group">
-    <div class="concern-header"><span class="dot green"></span> Concern D: Session data (prompts, files, diffs, tool calls) synced to <code>opncd.ai</code> — <span class="badge green">HAS FLAG</span> <button class="info-btn" onclick="openModal('D')" title="View full explanation">Learn more ↗</button></div>
-    <p style="font-size:0.85rem;color:var(--muted);margin-left:1rem;">Disablable via <code>OPENCODE_DISABLE_SHARE=true</code>. Data is only POSTed for sessions that have been explicitly shared. No standalone issue — covered by PR <a href="https://github.com/anomalyco/opencode/pull/18235">#18235</a> offline mode.</p>
+    <div class="concern-header">Session sharing (<code>opncd.ai</code>) — <span class="badge green">opt-in + has disable flag</span> <button class="info-btn" onclick="openModal('D')" title="View full explanation">Learn more ↗</button></div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-left:1rem;">Opt-in by default — you must explicitly share a session or set <code>"share": "auto"</code> in config (<a href="https://opencode.ai/docs/share">docs</a>). Disablable via <code>OPENCODE_DISABLE_SHARE=true</code>.</p>
   </div>
   <div class="concern-group">
-    <div class="concern-header"><span class="dot green"></span> Concern E: Search queries forwarded to third-party <code>mcp.exa.ai</code> with no authentication — <span class="badge orange">OPT-IN or AUTO with Zen</span> <button class="info-btn" onclick="openModal('E')" title="View full explanation">Learn more ↗</button></div>
-    <p style="font-size:0.85rem;color:var(--muted);margin-left:1rem;">Active when <code>OPENCODE_ENABLE_EXA=true</code> is set <strong>OR</strong> when using OpenCode Zen as your provider (auto-enabled, no flag needed). Built-in tools send queries with no API key (possible partnership deal). See <a href="#exa">details below</a>.</p>
+    <div class="concern-header">Exa search (<code>mcp.exa.ai</code>) — <span class="badge green">opt-in</span> <button class="info-btn" onclick="openModal('E')" title="View full explanation">Learn more ↗</button></div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-left:1rem;">Opt-in via <code>OPENCODE_ENABLE_EXA=true</code>. Auto-enabled when using OpenCode Zen. See <a href="#exa">details below</a>.</p>
   </div>
   <div class="concern-group">
-    <div class="concern-header"><span class="dot green"></span> Concern F: Auto-update periodically contacts <code>opencode.ai</code>, leaking IP, OS, and version — <span class="badge green">HAS FLAG</span> <button class="info-btn" onclick="openModal('F')" title="View full explanation">Learn more ↗</button></div>
-    <p style="font-size:0.85rem;color:var(--muted);margin-left:1rem;">Disablable via <code>OPENCODE_DISABLE_AUTOUPDATE=true</code>. Periodically fetches install script, leaking IP and version.</p>
+    <div class="concern-header">Auto-update (<code>opencode.ai</code>) — <span class="badge green">has disable flag</span> <button class="info-btn" onclick="openModal('F')" title="View full explanation">Learn more ↗</button></div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-left:1rem;">Disablable via <code>OPENCODE_DISABLE_AUTOUPDATE=true</code>. Standard auto-update behavior for CLI tools.</p>
   </div>
   <div class="concern-group">
-    <div class="concern-header"><span class="dot red"></span> Concern G: GitHub org/repo names and login tokens sent to <code>api.opencode.ai</code> — <span class="badge red">NO DISABLE FLAG</span> <button class="info-btn" onclick="openModal('G')" title="View full explanation">Learn more ↗</button></div>
-    <p style="font-size:0.85rem;color:var(--muted);margin-left:1rem;">No dedicated issue filed. Sends your GitHub organization and repository names to OpenCode's servers during <code>opencode github</code> commands. Also exchanges OIDC tokens (temporary login credentials) through their API. Only the login token path can be redirected via <code>OIDC_BASE_URL</code>; the installation check has no override at all.</p>
+    <div class="concern-header">GitHub integration (<code>api.opencode.ai</code>) — <span class="badge green">opt-in feature</span> <button class="info-btn" onclick="openModal('G')" title="View full explanation">Learn more ↗</button></div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-left:1rem;">Only fires during <code>opencode github</code> commands. Sends org/repo names for GitHub App installation checks.</p>
   </div>
 
 
 </div>
 
 <hr>
-<h2 id="solution">Proposed Solution</h2>
-<p>Since OpenCode has not merged any community fix, we built a standalone tool that blocks all telemetry at the OS level. Run once, forget forever. <a href="https://github.com/VooDisss/opencode-privacy-fix" style="color:var(--accent);">Audit the source code on GitHub before running ↗</a></p>
+<h2 id="flags">Official Disable Flags</h2>
+<p>OpenCode provides environment variables to control outbound connections. These are documented in the <a href="https://opencode.ai/docs/cli">CLI docs</a>. Set them in your shell profile or environment to make them permanent.</p>
+
+<table>
+  <thead><tr><th>Flag</th><th>What it disables</th><th>Documentation</th></tr></thead>
+  <tbody>
+    <tr><td><code>OPENCODE_DISABLE_AUTOUPDATE=true</code></td><td>Auto-update checks to <code>opencode.ai</code></td><td><a href="https://opencode.ai/docs/cli">CLI docs</a></td></tr>
+    <tr><td><code>OPENCODE_DISABLE_SHARE=true</code></td><td>Session sharing to <code>opncd.ai</code></td><td><a href="https://opencode.ai/docs/share">Share docs</a></td></tr>
+    <tr><td><code>OPENCODE_DISABLE_MODELS_FETCH=true</code></td><td>Model catalog fetch from <code>models.dev</code></td><td><a href="https://opencode.ai/docs/cli">CLI docs</a></td></tr>
+  </tbody>
+</table>
+
+<details>
+<summary><strong>Optional: hosts-file blocking tool</strong></summary>
+<div class="content">
+<p>If you also want to block the experimental web UI proxy (<code>app.opencode.ai</code>) at the OS level, there's a script that does this plus sets the env vars above. <a href="https://github.com/VooDisss/opencode-privacy-fix" style="color:var(--accent);">Audit the source code on GitHub before running ↗</a></p>
+<p><strong>Note:</strong> This is an aggressive approach — most users only need the env vars above. The hosts-file blocking will break the experimental web UI and the <code>opencode github</code> integration.</p>
 
 <div class="cmd-builder">
   <div class="cmd-row"><span class="cmd-row-label">Action</span><button class="cmd-btn active" onclick="setCmd(this,0,'install')">Install</button><button class="cmd-btn" onclick="setCmd(this,0,'uninstall')">Uninstall</button><button class="cmd-btn" onclick="setCmd(this,0,'status')">Check status</button><button class="cmd-btn" onclick="setCmd(this,0,'test')">Verify fix</button></div>
@@ -415,9 +415,11 @@ function copyCmd(btn) {
 }
 renderCmd();
 </script>
+</div>
+</details>
 
 <hr>
-<h2 id="what">What it does</h2>
+<h2 id="what">What the hosts-file tool does</h2>
 <div class="callout tip"><strong>Tip:</strong> Two things happen when you run <code>install</code>. Both persist across reboots. Both are fully reversible with <code>uninstall</code>.</div>
 <ol>
   <li><strong>Hosts file</strong> — blocks 5 telemetry domains at OS level</li>
@@ -576,7 +578,8 @@ OPENCODE_DISABLE_MODELS_FETCH=true</code></pre>
 
 <hr>
 <h2 id="why">Why this exists</h2>
-<p>The OpenCode CLI binary contacts 5 external domains during normal use, none disclosed in a privacy policy. 7 issues and 12 PRs have been filed by the community over 3+ months — zero merged. This page documents every concern with source code evidence and provides a workaround. See the <a href="https://www.reddit.com/r/LocalLLaMA/comments/1rv690j/opencode_concerns_not_truely_local/">original Reddit discussion</a>.</p>
+<p>OpenCode is an excellent open-source agentic coding tool. This page was created to document its network behavior for users who need to understand what connects where — especially in corporate or air-gapped environments. OpenCode has a <a href="https://opencode.ai/legal/privacy-policy">privacy policy</a>, and most outbound connections are either opt-in or have disable flags. The main open item is bundling the experimental web UI into the binary, which the developers have said they're working on.</p>
+<p style="color:var(--muted);font-size:0.9rem;">Background: <a href="https://www.reddit.com/r/LocalLLaMA/comments/1rv690j/opencode_concerns_not_truely_local/">original Reddit discussion</a></p>
 
 <hr>
 <h2 id="poll">Community Poll</h2>
