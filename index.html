@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>opencode-privacy-fix</title>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d;
+  --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+  --green: #3fb950; --red: #f85149; --orange: #d29922; --blue: #58a6ff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 1.25rem; line-height: 1.75; padding: 0 3rem 4rem; max-width: 1400px; width: 90%; margin: 0 auto; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1 { font-size: 2rem; margin: 2rem 0 0.5rem; }
+h2 { font-size: 1.4rem; margin: 1.5rem 0 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+h3 { font-size: 1.1rem; margin: 1rem 0 0.4rem; }
+hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+code { background: var(--surface); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.9em; }
+pre { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; overflow-x: auto; margin: 0.8rem 0; font-size: 0.85rem; line-height: 1.5; }
+pre code { background: none; padding: 0; }
+
+.banner { background: #1a2332; border: 1px solid var(--blue); border-radius: 6px; padding: 1rem 1.2rem; margin: 1.5rem 0; }
+.banner strong { color: var(--blue); }
+
+.callout { border-radius: 6px; padding: 0.8rem 1rem; margin: 0.8rem 0; border-left: 4px solid; }
+.callout.tip { background: #122117; border-color: var(--green); }
+.callout.warn { background: #2a1f0d; border-color: var(--orange); }
+.callout.note { background: #121d2f; border-color: var(--blue); }
+.callout.danger { background: #2a1015; border-color: var(--red); }
+.callout strong { margin-right: 0.3rem; }
+.callout.tip strong { color: var(--green); }
+.callout.warn strong { color: var(--orange); }
+.callout.note strong { color: var(--blue); }
+.callout.danger strong { color: var(--red); }
+
+.toc { display: flex; flex-wrap: wrap; gap: 0.3rem 0.8rem; margin: 1rem 0; font-size: 0.9rem; }
+.toc a { padding: 0.2rem 0.5rem; border-radius: 4px; background: var(--surface); border: 1px solid var(--border); }
+.toc a:hover { background: var(--border); text-decoration: none; }
+
+.badge { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 0.15em 0.5em; border-radius: 10px; vertical-align: middle; }
+.badge.red { background: #3d1215; color: var(--red); }
+.badge.green { background: #0f291a; color: var(--green); }
+.badge.orange { background: #2a1f0d; color: var(--orange); }
+
+details { margin: 0.4rem 0; }
+details > summary { cursor: pointer; font-weight: 600; padding: 0.5rem 0.7rem; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); list-style: none; user-select: none; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before { content: '▶'; display: inline-block; margin-right: 0.5rem; font-size: 0.7em; transition: transform 0.2s; }
+details[open] > summary::before { transform: rotate(90deg); }
+details > summary:hover { background: #1c2128; }
+details > .content { padding: 0.6rem 0 0.6rem 1.2rem; border-left: 2px solid var(--border); margin-left: 0.5rem; margin-top: 0.3rem; }
+
+details.L2 > summary { background: #1c2128; font-size: 0.95em; }
+details.L3 > summary { background: #21262d; font-size: 0.9em; }
+details.L4 > summary { background: #262c34; font-size: 0.85em; }
+details.L2 > .content { border-left-color: #3a424b; }
+details.L3 > .content { border-left-color: #444c56; }
+details.L4 > .content { border-left-color: #4e5663; }
+
+table { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.9rem; }
+th, td { text-align: left; padding: 0.5rem 0.7rem; border: 1px solid var(--border); }
+th { background: var(--surface); font-weight: 600; }
+tr:nth-child(even) { background: #161b2205; }
+
+ul, ol { padding-left: 1.5rem; margin: 0.5rem 0; }
+li { margin: 0.3rem 0; }
+p { margin: 0.5rem 0; }
+
+.tracker { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin: 1.5rem 0; }
+.tracker h2 { margin-top: 0; border: none; padding: 0; font-size: 1.3rem; }
+.scorecard { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.8rem; margin: 1rem 0; }
+.score-item { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem; text-align: center; }
+.score-num { font-size: 2rem; font-weight: 700; line-height: 1; }
+.score-num.red { color: var(--red); }
+.score-num.green { color: var(--green); }
+.score-num.orange { color: var(--orange); }
+.score-num.muted { color: var(--muted); }
+.score-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
+
+.concern-group { margin: 1rem 0 0.5rem; }
+.concern-header { font-weight: 600; font-size: 0.95rem; padding: 0.4rem 0; color: var(--text); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.concern-header .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.concern-header .badge { flex-shrink: 0; }
+.concern-header .dot.red { background: var(--red); }
+.concern-header .dot.green { background: var(--green); }
+.concern-header .dot.orange { background: var(--orange); }
+
+.item-card { margin: 0.2rem 0 0.2rem 1rem; border: 1px solid var(--border); border-radius: 6px; }
+.item-card > summary { display: grid; grid-template-columns: 4.5rem 1fr auto auto; gap: 0.5rem; align-items: center; padding: 0.5rem 0.7rem; border-radius: 5px; font-size: 1rem; font-weight: 400; background: transparent; border: none; }
+.item-card > summary::before { display: none; }
+.item-card > summary:hover { background: #1c2128; }
+.item-card[open] > summary { background: #1c2128; border-bottom: 1px solid var(--border); border-radius: 5px 5px 0 0; }
+.item-card .num { font-weight: 600; }
+.item-card .num a { color: var(--text); }
+.item-card .num a:hover { color: var(--accent); }
+.item-card .title { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-card .assignee { font-size: 0.75rem; color: var(--muted); }
+.item-card .assignee a { color: var(--muted); }
+.item-card .assignee a:hover { color: var(--accent); }
+.card-body { padding: 0.7rem 0.9rem; font-size: 1rem; color: var(--muted); background: var(--bg); border-radius: 0 0 5px 5px; }
+.card-body p { margin: 0.3rem 0; }
+.card-body .card-meta { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.3rem 1.2rem; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border); font-size: 0.8rem; }
+.card-body .card-meta span { white-space: nowrap; }
+.card-body .card-meta .label { color: var(--muted); opacity: 0.7; }
+.card-body blockquote { border-left: 3px solid var(--border); padding: 0.3rem 0.7rem; margin: 0.5rem 0; font-style: italic; color: var(--text); background: var(--surface); border-radius: 0 4px 4px 0; }
+.card-body .gh-link { display: inline-block; margin-top: 0.5rem; font-size: 0.8rem; color: var(--accent); }
+
+.pill { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 0.1em 0.5em; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; }
+.pill.open { background: #1a3d1a; color: var(--green); }
+.pill.closed { background: #3d1215; color: var(--red); }
+.pill.merged { background: #2a1a3d; color: #a371f7; }
+.pill.dup { background: #2a1f0d; color: var(--orange); }
+
+.tracker-note { font-size: 0.8rem; color: var(--muted); margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--border); }
+
+.stance-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin: 0.8rem 0 0.3rem; }
+.stance-bar .seg { transition: width 0.3s; }
+.stance-bar .seg.red { background: var(--red); }
+.stance-bar .seg.green { background: var(--green); }
+.stance-bar .seg.orange { background: var(--orange); }
+.stance-bar .seg.muted { background: var(--muted); }
+.stance-legend { display: flex; gap: 1rem; font-size: 0.75rem; color: var(--muted); flex-wrap: wrap; }
+.stance-legend span::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 0.3rem; vertical-align: middle; }
+.stance-legend .l-open::before { background: var(--red); }
+.stance-legend .l-closed::before { background: var(--orange); }
+.stance-legend .l-merged::before { background: var(--green); }
+.stance-legend .l-dup::before { background: var(--muted); }
+
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; overflow-y:auto; padding:2rem; }
+.modal-overlay.open { display:flex; align-items:flex-start; justify-content:center; }
+.modal-box { background:var(--bg); border:1px solid var(--border); border-radius:10px; width:100%; max-width:900px; margin:2rem auto; padding:2rem; position:relative; }
+.modal-close { position:absolute; top:1rem; right:1rem; background:var(--surface); border:1px solid var(--border); color:var(--muted); width:32px; height:32px; border-radius:6px; font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.modal-close:hover { background:var(--border); color:var(--text); }
+.modal-box h2 { margin-top:0; border:none; font-size:1.3rem; padding-right:2.5rem; }
+.modal-box h3 { font-size:1.05rem; margin:1.2rem 0 0.4rem; color:var(--text); }
+.modal-box p, .modal-box li { margin:0.5rem 0; color:var(--muted); font-size:0.9rem; line-height:1.7; }
+.modal-box ul, .modal-box ol { font-size:0.9rem; }
+.modal-box pre { font-size:0.82rem; }
+.modal-box code { font-size:0.85rem; }
+.poll { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:1.2rem; margin:1.5rem 0; }
+.poll h3 { margin:0 0 0.3rem; font-size:1.1rem; }
+.poll-q { color:var(--muted); font-size:0.9rem; margin:0.3rem 0 1rem; }
+.poll-options { display:flex; flex-direction:column; gap:0.5rem; }
+.poll-row { display:flex; align-items:center; gap:0.8rem; }
+.poll-bar-bg { flex:1; height:28px; background:var(--bg); border:1px solid var(--border); border-radius:4px; position:relative; overflow:hidden; }
+.poll-bar-fill { height:100%; border-radius:3px; transition:width 0.6s ease; position:absolute; top:0; left:0; }
+.poll-bar-fill.optin { background:#3fb950; opacity:0.3; }
+.poll-bar-fill.disclose { background:#58a6ff; opacity:0.3; }
+.poll-bar-fill.anon { background:#d2a8ff; opacity:0.3; }
+.poll-bar-fill.unsure { background:var(--orange); opacity:0.3; }
+.poll-bar-fill.fine { background:var(--red); opacity:0.3; }
+.poll-bar-label { position:absolute; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:space-between; padding:0 0.6rem; font-size:0.8rem; color:var(--text); z-index:1; }
+.poll-count { font-weight:600; }
+.poll-vote-link { display:inline-block; margin-top:0.8rem; font-size:0.85rem; color:var(--accent); padding:0.4rem 0.8rem; border:1px solid var(--accent); border-radius:4px; }
+.poll-vote-link:hover { background:var(--accent); color:#0d1117; text-decoration:none; }
+.poll-footer { font-size:0.75rem; color:var(--muted); margin-top:0.6rem; }
+
+.tip { border-bottom:1px dotted var(--muted); cursor:help; position:relative; }
+.tip:hover::after { content:attr(data-tip); position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--surface); color:var(--text); border:1px solid var(--border); padding:0.4rem 0.7rem; border-radius:6px; font-size:0.8rem; font-weight:400; white-space:normal; width:max-content; max-width:320px; z-index:20000; line-height:1.5; pointer-events:none; box-shadow:0 4px 12px rgba(0,0,0,0.4); }
+.modal-box .badge { vertical-align:middle; }
+.info-btn { background:var(--bg); border:1px solid var(--border); color:var(--muted); padding:0.2rem 0.7rem; border-radius:4px; font-size:0.75rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.3rem; margin-left:auto; flex-shrink:0; font-weight:600; white-space:nowrap; }
+.info-btn:hover { background:var(--accent); color:#0d1117; border-color:var(--accent); }
+
+.cmd-builder { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+.cmd-row { display: flex; align-items: center; gap: 0.5rem; margin: 0.4rem 0; flex-wrap: wrap; }
+.cmd-row-label { font-size: 0.8rem; color: var(--muted); min-width: 5rem; flex-shrink: 0; }
+.cmd-btn { background: var(--bg); border: 1px solid var(--border); color: var(--muted); padding: 0.3rem 0.7rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
+.cmd-btn:hover { border-color: var(--accent); color: var(--text); }
+.cmd-btn.active { background: var(--accent); color: #0d1117; border-color: var(--accent); font-weight: 600; }
+.cmd-output { margin-top: 0.8rem; }
+.cmd-output pre { margin: 0; position: relative; }
+.cmd-output .cmd-desc { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.4rem; }
+.cmd-copy { position:absolute; top:0.5rem; right:0.5rem; background:var(--bg); border:1px solid var(--border); color:var(--muted); padding:0.25rem 0.5rem; border-radius:4px; font-size:0.7rem; cursor:pointer; opacity:0; transition:opacity 0.15s; }
+.cmd-output pre:hover .cmd-copy { opacity:1; }
+.cmd-copy:hover { background:var(--accent); color:#0d1117; border-color:var(--accent); }
+.cmd-copy.copied { background:var(--green); color:#0d1117; border-color:var(--green); opacity:1; }
+
+.copy-btn { position: fixed; bottom: 1.5rem; right: 1.5rem; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: 1.2rem; cursor: pointer; opacity: 0.5; transition: opacity 0.2s, background 0.2s; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+.copy-btn:hover { opacity: 1; background: var(--border); color: var(--text); }
+.copy-toast { position: fixed; bottom: 4.5rem; right: 1.2rem; background: var(--surface); color: var(--accent); border: 1px solid var(--border); border-radius: 6px; padding: 0.3rem 0.7rem; font-size: 0.8rem; opacity: 0; transition: opacity 0.3s; z-index: 9999; pointer-events: none; }
+.copy-toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<h1 style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">opencode-privacy-fix <a href="https://github.com/VooDisss/opencode-privacy-fix" style="font-size:0.7em;font-weight:400;color:var(--muted);border:1px solid var(--border);padding:0.2rem 0.6rem;border-radius:4px;text-decoration:none;">GitHub repo ↗</a></h1>
+
+<div class="banner">
+  <strong>Important:</strong> Blocks all undocumented outbound connections in <a href="https://github.com/anomalyco/opencode">OpenCode</a>. Run once, use <code>opencode</code> as normal. Nothing changes about how you launch or use it.
+</div>
+
+<div class="toc">
+  <a href="#tracker">Privacy Tracker</a>
+  <a href="#solution">Proposed Solution</a>
+  <a href="#what">What it does</a>
+  <a href="#why">Why this exists</a>
+  <a href="#poll">Poll</a>
+  <a href="#discussion">Discussion</a>
+</div>
+
+<hr>
+
+<div class="tracker" id="tracker">
+  <h2>OpenCode Privacy Tracker</h2>
+  <p style="color:var(--muted);font-size:0.9rem;margin:0.3rem 0 0.8rem;">Community-reported privacy issues and fix attempts. Audited against OpenCode <a href="https://github.com/anomalyco/opencode/releases/tag/v1.3.0">v1.3.0</a> (<a href="https://github.com/anomalyco/opencode/commit/34f43fff89d14c72aada06e0dc1d9228ec4d667d"><code>34f43ff</code></a>) on March 24, 2026.</p>
+
+  <div class="scorecard">
+    <div class="score-item">
+      <div class="score-num red">7</div>
+      <div class="score-label">Issues open</div>
+    </div>
+    <div class="score-item">
+      <div class="score-num red">12</div>
+      <div class="score-label">Community PRs</div>
+    </div>
+    <div class="score-item">
+      <div class="score-num green">0</div>
+      <div class="score-label">PRs merged</div>
+    </div>
+    <div class="score-item">
+      <div class="score-num orange">3+</div>
+      <div class="score-label">Months unresolved</div>
+    </div>
+  </div>
+
+  <div class="callout danger" style="margin:1rem 0;">
+    <strong>OpenCode's privacy stance:</strong> No privacy policy, no telemetry disclosure, and no network documentation have been published. Some disable flags appear in the CLI docs but with <strong>zero privacy context</strong> — descriptions like "Disable automatic update checks" without mentioning it contacts <code>opencode.ai</code> and leaks your IP and operating system. <code>OPENCODE_DISABLE_SHARE</code> is missing from docs entirely. 7 community issues and 12 community PRs have been filed over 3+ months — <strong>zero merged</strong>. A maintainer commented on PR <a href="https://github.com/anomalyco/opencode/pull/18235">#18235</a> (Mar 20, 2026): <em>"We ofc need to ship something with this shape, internally we talked about some approaches briefly"</em> — no action since. The two most critical concerns (<code>app.opencode.ai</code> proxy, <code>api.opencode.ai</code> GitHub calls) have no disable flag at all. Multiple connections also leak your <strong>operating system</strong> via User-Agent headers and platform-specific requests.
+  </div>
+
+  <p style="font-size:0.85rem;color:var(--muted);margin-bottom:0.3rem;"><strong style="color:var(--text);">PR resolution bar</strong> — of 12 community PRs addressing privacy concerns:</p>
+  <div class="stance-bar">
+    <div class="seg red" style="width:33%" title="5 open, no review"></div>
+    <div class="seg orange" style="width:50%" title="6 closed by bot"></div>
+    <div class="seg muted" style="width:8.3%" title="1 closed as duplicate"></div>
+    <div class="seg green" style="width:0%" title="0 merged"></div>
+  </div>
+  <div class="stance-legend">
+    <span class="l-open">Open, unreviewed (5)</span>
+    <span class="l-closed">Auto-closed by bot (6)</span>
+    <span class="l-dup">Closed other (1)</span>
+    <span class="l-merged">Merged (0)</span>
+  </div>
+
+  <!-- Concern A -->
+  <div class="concern-group">
+    <div class="concern-header"><span class="dot red"></span> Concern A: Web UI silently proxies all requests to <code>app.opencode.ai</code> — <span class="badge red">NO DISABLE FLAG</span> <button class="info-btn" onclick="openModal('A')" title="View full explanation">Learn more ↗</button></div>
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/issues/6352">#6352</a></span><span class="title">Allow overriding web client path / bundle with binary</span><span class="pill open">issue · open</span><span class="assignee"><a href="https://github.com/thdxr">@thdxr</a></span></summary><div class="card-body"><p>First issue to raise the privacy concern (Dec 29, 2025). Project paths are leaked to <code>app.opencode.ai</code> through the catch-all proxy. Requests either bundling the web UI into the binary or adding a config override for the proxy URL. Also raises a stability concern: the CDN-hosted UI can change between binary releases, causing version mismatches.</p><div class="card-meta"><span><span class="label">Created:</span> 2025-12-29</span><span><span class="label">Created by:</span> <a href="https://github.com/paperclover">@paperclover</a></span><span><span class="label">Assigned to:</span> <a href="https://github.com/thdxr">@thdxr</a></span><span>6 reactions</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/issues/6352">View on GitHub →</a></div></details>
+
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/issues/8549">#8549</a></span><span class="title">Web doesn't work without internet (corporate)</span><span class="pill open">issue · open</span><span class="assignee"><a href="https://github.com/adamdotdevin">@adamdotdevin</a></span></summary><div class="card-body"><p>Main tracking issue for the offline web UI problem. The web UI fails completely in corporate/air-gapped environments because it depends on <code>app.opencode.ai</code> for all frontend assets. 16 reactions and 10 comments — the most-engaged privacy issue. Multiple community workaround commits linked in the comments (proAlexandr, tardyp).</p><div class="card-meta"><span><span class="label">Created:</span> 2026-1-14</span><span><span class="label">Created by:</span> <a href="https://github.com/IceWreck">@IceWreck</a></span><span><span class="label">Assigned to:</span> <a href="https://github.com/adamdotdevin">@adamdotdevin</a></span><span>16 reactions · 10 comments</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/issues/8549">View on GitHub →</a></div></details>
+
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/issues/11981">#11981</a></span><span class="title">opencode web shall not use external app.opencode.ai</span><span class="pill dup">issue · dup</span><span class="assignee"><a href="https://github.com/adamdotdevin">@adamdotdevin</a></span></summary><div class="card-body"><p>Filed by a user on GCP Cloud Workstations where <code>app.opencode.ai</code> is blocked by corporate firewall. Closed by the reporter as a duplicate of #8549. The reporter (tardyp) contributed a workaround commit (<a href="https://github.com/anomalyco/opencode/commit/a988b75">a988b75</a>) that serves the frontend from the same port.</p><div class="card-meta"><span><span class="label">Created:</span> 2026-2-3</span><span><span class="label">Created by:</span> <a href="https://github.com/tardyp">@tardyp</a></span><span><span class="label">Assigned to:</span> <a href="https://github.com/adamdotdevin">@adamdotdevin</a></span><span>Closed as duplicate of <a href="https://github.com/anomalyco/opencode/issues/8549">#8549</a></span><span>3 reactions</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/issues/11981">View on GitHub →</a></div></details>
+
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/issues/12083">#12083</a></span><span class="title">Unable to connect — intranet users</span><span class="pill open">issue · open</span><span class="assignee"><a href="https://github.com/rekram1-node">@rekram1-node</a></span></summary><div class="card-body"><p>Pure intranet users cannot load the web UI at all. 16 comments and 10 reactions. The reporter traced the root cause to the <code>server.ts</code> catch-all proxy. Distinct from #8549 in that this focuses on users who have zero external internet access, not just restricted corporate access.</p><div class="card-meta"><span><span class="label">Created:</span> 2026-2-4</span><span><span class="label">Created by:</span> <a href="https://github.com/jakiechris">@jakiechris</a></span><span><span class="label">Assigned to:</span> <a href="https://github.com/rekram1-node">@rekram1-node</a></span><span>10 reactions · 16 comments</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/issues/12083">View on GitHub →</a></div></details>
+
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/issues/12445">#12445</a></span><span class="title">Support custom web app proxy URL (firewalled env)</span><span class="pill open">issue · open</span><span class="assignee"><a href="https://github.com/adamdotdevin">@adamdotdevin</a></span></summary><div class="card-body"><p>Root feature request for an <code>OPENCODE_APP_URL</code> environment variable to override the hardcoded <code>app.opencode.ai</code> proxy destination. Spawned PR #12446. 4 reactions.</p><div class="card-meta"><span><span class="label">Created:</span> 2026-2-6</span><span><span class="label">Created by:</span> <a href="https://github.com/jobrk">@jobrk</a></span><span><span class="label">Assigned to:</span> <a href="https://github.com/adamdotdevin">@adamdotdevin</a></span><span>4 reactions</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/issues/12445">View on GitHub →</a></div></details>
+
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/issues/16787">#16787</a></span><span class="title">Option to disable web UI proxy for TUI-only</span><span class="pill open">issue · open</span><span class="assignee"><a href="https://github.com/thdxr">@thdxr</a></span></summary><div class="card-body"><p>TUI-only user wants an <code>OPENCODE_DISABLE_WEB</code> flag so the catch-all proxy returns 404 instead of proxying to <code>app.opencode.ai</code>. References #12445 and #11981. No PR has been created for this approach.</p><div class="card-meta"><span><span class="label">Created:</span> 2026-3-9</span><span><span class="label">Created by:</span> <a href="https://github.com/mik3h0">@mik3h0</a></span><span><span class="label">Assigned to:</span> <a href="https://github.com/thdxr">@thdxr</a></span><span>1 reaction</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/issues/16787">View on GitHub →</a></div></details>
+
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/issues/17406">#17406</a></span><span class="title">Web UI requires internet — binary proxies to CDN</span><span class="pill open">issue · open</span><span class="assignee"><a href="https://github.com/thdxr">@thdxr</a></span></summary><div class="card-body"><p>Filed by BYK (author of PR #15721). Detailed technical write-up: the binary is ~159MB but proxies all HTML/JS/CSS/fonts to the CDN instead of serving them locally. Distinct from #12083 — this is specifically about the binary not embedding web assets despite having room. Spawned PRs #15700 and #15721.</p><div class="card-meta"><span><span class="label">Created:</span> 2026-3-13</span><span><span class="label">Created by:</span> <a href="https://github.com/AyoBYK">@BYK</a></span><span><span class="label">Assigned to:</span> <a href="https://github.com/thdxr">@thdxr</a></span><span>2 reactions</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/issues/17406">View on GitHub →</a></div></details>
+
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/pull/12446">#12446</a></span><span class="title">PR: Add OPENCODE_APP_URL for custom proxy</span><span class="pill open">pr · open</span><span class="assignee">by @jobrk</span></summary><div class="card-body"><p>Minimal 5-line change adding an <code>OPENCODE_APP_URL</code> env var to override the <code>app.opencode.ai</code> proxy destination. 18 reactions. Reviewed by community contributor @kikuchan who identified a subpath routing bug — but kikuchan explicitly stated they cannot press the approve button because they are not a maintainer. No maintainer has reviewed it.</p><div class="card-meta"><span><span class="label">Created:</span> 2026-2-6</span><span><span class="label">Created by:</span> @jobrk</span><span><span class="label">Assigned to:</span> —</span><span>18 reactions · 1 commit · 5 lines · Mergeable</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/pull/12446">View on GitHub →</a></div></details>
+
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/pull/12829">#12829</a></span><span class="title">PR: Embed web UI in binary</span><span class="pill open">pr · open</span><span class="assignee">by @nicell</span></summary><div class="card-body"><p>Bundles the web UI at build time with a flag to disable. 41 reactions — the most-reacted PR. Tested in air-gapped Docker by @Chetic and confirmed working. @BlankParticle pinged maintainers. Maintainers responded that they were <em>"interested in doing this themselves"</em> but no internal PR has materialized.</p><div class="card-meta"><span><span class="label">Created:</span> 2026-2-8</span><span><span class="label">Created by:</span> @nicell</span><span><span class="label">Assigned to:</span> —</span><span>41 reactions · 2 commits · Merge conflicts</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/pull/12829">View on GitHub →</a></div></details>
+
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/pull/15700">#15700</a></span><span class="title">PR: Embed web UI assets (BYK v1)</span><span class="pill closed">pr · bot closed</span><span class="assignee">by @BYK</span></summary><div class="card-body"><p>BYK's first attempt at embedding web UI assets. 294 additions. <strong>Auto-closed by the compliance bot</strong> for missing PR template fields. Superseded by #15721 which fixes the issues found in this version (middleware ordering, SPA route hijacking, CI compatibility).</p><div class="card-meta"><span><span class="label">Created:</span> 2026-3-2</span><span><span class="label">Created by:</span> <a href="https://github.com/AyoBYK">@BYK</a></span><span><span class="label">Assigned to:</span> —</span><span>Closed: auto-closed by bot (missing PR template)</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/pull/15700">View on GitHub →</a></div></details>
+
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/pull/15721">#15721</a></span><span class="title">PR: Embed web UI assets (BYK v2) — best candidate</span><span class="pill open">pr · open</span><span class="assignee">by @BYK</span></summary><div class="card-body"><p><strong>Most technically mature PR.</strong> 229 additions, 3 commits. Fixes v1 bugs: middleware ordering, SPA route hijacking, CI compatibility. Externalizes 83 optional font files (~27MB) to keep binary size reasonable (~174MB vs ~159MB). Tested in air-gapped environment by @Warkeeper and confirmed working. Codeowner review requested from <a href="https://github.com/adamdotdevin">@adamdotdevin</a> — <strong>no reviews have been submitted yet.</strong></p><div class="card-meta"><span><span class="label">Created:</span> 2026-3-4</span><span><span class="label">Created by:</span> <a href="https://github.com/AyoBYK">@BYK</a></span><span><span class="label">Assigned to:</span> —</span><span>229 additions · 3 commits · Mergeable · Review: requested from <a href="https://github.com/adamdotdevin">@adamdotdevin</a>, none received</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/pull/15721">View on GitHub →</a></div></details>
+
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/pull/17104">#17104</a></span><span class="title">PR: Support OPENCODE_WEB_URL for local serving</span><span class="pill open">pr · open</span><span class="assignee">by @sjawhar</span></summary><div class="card-body"><p>Supports two modes: (1) <code>file://</code> path for serving local web assets, (2) HTTP URL for a custom proxy target. Closes <a href="https://github.com/anomalyco/opencode/issues/12445">#12445</a>. Relates to <a href="https://github.com/anomalyco/opencode/issues/8549">#8549</a>, <a href="https://github.com/anomalyco/opencode/issues/11981">#11981</a>, <a href="https://github.com/anomalyco/opencode/issues/16787">#16787</a>. Passed compliance. Status: blocked (merge conflicts).</p><div class="card-meta"><span><span class="label">Created:</span> 2026-3-12</span><span><span class="label">Created by:</span> @sjawhar</span><span><span class="label">Assigned to:</span> —</span><span>Closes <a href="https://github.com/anomalyco/opencode/issues/12445">#12445</a> · Merge conflicts</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/pull/17104">View on GitHub →</a></div></details>
+
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/pull/18506">#18506—#18522</a></span><span class="title">PR: Offline web static serve (DroganC — 6 attempts)</span><span class="pill closed">5 bot closed · 1 open</span><span class="assignee">by @DroganC</span></summary><div class="card-body"><p>DroganC attempted to submit the same offline web serving fix <strong>6 times</strong>. The approach adds an <code>OPENCODE_APP_DIST</code> env var to serve web assets from <code>packages/app/dist</code> locally, plus an <code>OFFLINE_WEB.md</code> documentation file. 138 additions, 12 files changed.</p><p><strong>Why 5 were closed:</strong> The repo has an automated compliance bot that auto-closes PRs within ~2 hours if they don't meet template requirements (<code>needs:title</code>, <code>needs:compliance</code>). PRs <a href="https://github.com/anomalyco/opencode/pull/18506">#18506</a>, <a href="https://github.com/anomalyco/opencode/pull/18508">#18508</a>, <a href="https://github.com/anomalyco/opencode/pull/18510">#18510</a>, <a href="https://github.com/anomalyco/opencode/pull/18520">#18520</a>, and <a href="https://github.com/anomalyco/opencode/pull/18521">#18521</a> were all closed by this bot. The 6th attempt (<a href="https://github.com/anomalyco/opencode/pull/18522">#18522</a>) finally passed compliance and remains open with review requested from <a href="https://github.com/adamdotdevin">@adamdotdevin</a>.</p><div class="card-meta"><span><span class="label">Created:</span> 2026-3-22</span><span><span class="label">Created by:</span> @DroganC</span><span><span class="label">Assigned to:</span> —</span><span><a href="https://github.com/anomalyco/opencode/pull/18506">#18506</a> closed (bot)</span><span><a href="https://github.com/anomalyco/opencode/pull/18508">#18508</a> closed (bot)</span><span><a href="https://github.com/anomalyco/opencode/pull/18510">#18510</a> closed (bot)</span><span><a href="https://github.com/anomalyco/opencode/pull/18520">#18520</a> closed (bot)</span><span><a href="https://github.com/anomalyco/opencode/pull/18521">#18521</a> closed (bot)</span><span><strong><a href="https://github.com/anomalyco/opencode/pull/18522">#18522</a> open</strong></span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/pull/18522">View #18522 on GitHub →</a></div></details>
+  </div>
+
+  <!-- Concern B -->
+  <div class="concern-group">
+    <div class="concern-header"><span class="dot red"></span> Concern B: No single "offline mode" to disable all outbound connections — <span class="badge red">NO DISABLE FLAG</span> <button class="info-btn" onclick="openModal('B')" title="View full explanation">Learn more ↗</button></div>
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/pull/18235">#18235</a></span><span class="title">PR: Add offline mode (--offline)</span><span class="pill open">pr · open</span><span class="assignee">by @dgruzd</span></summary><div class="card-body"><p>Adds <code>OPENCODE_OFFLINE=true</code> / <code>--offline</code> CLI flag as a single kill switch for all non-essential outbound connections. When enabled: disables auto-update, disables session sharing, web UI proxy returns 503. 233 additions, 5 tests.</p><blockquote>Maintainer <a href="https://github.com/rekram1-node">@rekram1-node</a> (Mar 20, 2026): "We ofc need to ship something with this shape, internally we talked about some approaches briefly, ill need to sync back w/ them to see what they think is best next week"</blockquote><p>No follow-up action since that comment.</p><div class="card-meta"><span><span class="label">Created:</span> 2026-3-20</span><span><span class="label">Created by:</span> @dgruzd</span><span><span class="label">Assigned to:</span> —</span><span>233 additions · 5 tests · Merge conflicts · Maintainer acknowledged</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/pull/18235">View on GitHub →</a></div></details>
+  </div>
+
+  <div class="concern-group">
+    <div class="concern-header"><span class="dot orange"></span> Concern C: Model catalog fetched from <code>models.dev</code>, leaking your IP and OpenCode version — <span class="badge green">HAS FLAG</span> <button class="info-btn" onclick="openModal('C')" title="View full explanation">Learn more ↗</button></div>
+    <details class="item-card"><summary><span class="num"><a href="https://github.com/anomalyco/opencode/issues/18638">#18638</a></span><span class="title">Offline deployment blocked by models.dev requests</span><span class="pill open">issue · open</span><span class="assignee">—</span></summary><div class="card-body"><p>Docker deployment (<code>ghcr.io/anomalyco/opencode:1.1.53</code>) keeps requesting <code>models.dev</code>, blocking the web interface in offline environments. The <code>OPENCODE_DISABLE_MODELS_FETCH</code> flag exists but is undocumented — users don't know it's available. The flag is also only checked <em>after</em> local cache and bundled snapshot both fail, so the fetch can happen before the flag takes effect.</p><div class="card-meta"><span><span class="label">Created:</span> 2026-3-22</span><span><span class="label">Created by:</span> <a href="https://github.com/Leekinxun">@Leekinxun</a></span><span><span class="label">Assigned to:</span> —</span></div><a class="gh-link" href="https://github.com/anomalyco/opencode/issues/18638">View on GitHub →</a></div></details>
+  </div>
+
+  <div class="concern-group">
+    <div class="concern-header"><span class="dot green"></span> Concern D: Session data (prompts, files, diffs, tool calls) synced to <code>opncd.ai</code> — <span class="badge green">HAS FLAG</span> <button class="info-btn" onclick="openModal('D')" title="View full explanation">Learn more ↗</button></div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-left:1rem;">Disablable via <code>OPENCODE_DISABLE_SHARE=true</code>. Data is only POSTed for sessions that have been explicitly shared. No standalone issue — covered by PR <a href="https://github.com/anomalyco/opencode/pull/18235">#18235</a> offline mode.</p>
+  </div>
+  <div class="concern-group">
+    <div class="concern-header"><span class="dot green"></span> Concern E: Search queries forwarded to third-party <code>mcp.exa.ai</code> with no authentication — <span class="badge orange">OPT-IN or AUTO with Zen</span> <button class="info-btn" onclick="openModal('E')" title="View full explanation">Learn more ↗</button></div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-left:1rem;">Active when <code>OPENCODE_ENABLE_EXA=true</code> is set <strong>OR</strong> when using OpenCode Zen as your provider (auto-enabled, no flag needed). Built-in tools send queries with no API key (possible partnership deal). See <a href="#exa">details below</a>.</p>
+  </div>
+  <div class="concern-group">
+    <div class="concern-header"><span class="dot green"></span> Concern F: Auto-update periodically contacts <code>opencode.ai</code>, leaking IP, OS, and version — <span class="badge green">HAS FLAG</span> <button class="info-btn" onclick="openModal('F')" title="View full explanation">Learn more ↗</button></div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-left:1rem;">Disablable via <code>OPENCODE_DISABLE_AUTOUPDATE=true</code>. Periodically fetches install script, leaking IP and version.</p>
+  </div>
+  <div class="concern-group">
+    <div class="concern-header"><span class="dot red"></span> Concern G: GitHub org/repo names and login tokens sent to <code>api.opencode.ai</code> — <span class="badge red">NO DISABLE FLAG</span> <button class="info-btn" onclick="openModal('G')" title="View full explanation">Learn more ↗</button></div>
+    <p style="font-size:0.85rem;color:var(--muted);margin-left:1rem;">No dedicated issue filed. Sends your GitHub organization and repository names to OpenCode's servers during <code>opencode github</code> commands. Also exchanges OIDC tokens (temporary login credentials) through their API. Only the login token path can be redirected via <code>OIDC_BASE_URL</code>; the installation check has no override at all.</p>
+  </div>
+
+
+</div>
+
+<hr>
+<h2 id="solution">Proposed Solution</h2>
+<p>Since OpenCode has not merged any community fix, we built a standalone tool that blocks all telemetry at the OS level. Run once, forget forever. <a href="https://github.com/VooDisss/opencode-privacy-fix" style="color:var(--accent);">Audit the source code on GitHub before running ↗</a></p>
+
+<div class="cmd-builder">
+  <div class="cmd-row"><span class="cmd-row-label">Action</span><button class="cmd-btn active" onclick="setCmd(this,0,'install')">Install</button><button class="cmd-btn" onclick="setCmd(this,0,'uninstall')">Uninstall</button><button class="cmd-btn" onclick="setCmd(this,0,'status')">Check status</button><button class="cmd-btn" onclick="setCmd(this,0,'test')">Verify fix</button></div>
+  <div class="cmd-row"><span class="cmd-row-label">Platform</span><button class="cmd-btn active" onclick="setCmd(this,1,'linux')">Linux / macOS</button><button class="cmd-btn" onclick="setCmd(this,1,'windows')">Windows</button></div>
+  <div class="cmd-row"><span class="cmd-row-label">Method</span><button class="cmd-btn active" onclick="setCmd(this,2,'script')">Shell script</button><button class="cmd-btn" onclick="setCmd(this,2,'binary')">Go binary</button></div>
+  <div class="cmd-output" id="cmdOut"></div>
+
+</div>
+<script>
+var cmdState = ['install','linux','script'];
+var cmds = {
+  'install-linux-script': {
+    desc: 'Downloads the fix script and runs it (requires sudo):',
+    code: 'curl -fsSL https://raw.githubusercontent.com/VooDisss/opencode-privacy-fix/master/opencode-hosts-block.sh -o opencode-hosts-block.sh\nchmod +x opencode-hosts-block.sh\nsudo ./opencode-hosts-block.sh'
+  },
+  'install-windows-script': {
+    desc: 'Downloads the fix script and runs it (requires Administrator PowerShell):',
+    code: "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/VooDisss/opencode-privacy-fix/master/opencode-hosts-block.ps1' -OutFile 'opencode-hosts-block.ps1'\n.\\opencode-hosts-block.ps1"
+  },
+  'install-linux-binary': {
+    desc: 'Download the prebuilt binary from Releases, or build from source:',
+    code: 'git clone https://github.com/VooDisss/opencode-privacy-fix.git\ncd opencode-privacy-fix\ngo build -o opencode-privacy-fix main.go\n./opencode-privacy-fix install'
+  },
+  'install-windows-binary': {
+    desc: 'Download the prebuilt binary from Releases, or build from source:',
+    code: 'git clone https://github.com/VooDisss/opencode-privacy-fix.git\ncd opencode-privacy-fix\ngo build -o opencode-privacy-fix.exe main.go\n.\\opencode-privacy-fix.exe install'
+  },
+  'uninstall-linux-script': {
+    desc: 'Reverts all changes made by the install script:',
+    code: 'sudo ./opencode-hosts-block.sh uninstall'
+  },
+  'uninstall-windows-script': {
+    desc: 'Reverts all changes made by the install script (requires Administrator PowerShell):',
+    code: '.\\opencode-hosts-block.ps1 uninstall'
+  },
+  'uninstall-linux-binary': {
+    desc: 'Reverts all changes:',
+    code: './opencode-privacy-fix uninstall'
+  },
+  'uninstall-windows-binary': {
+    desc: 'Reverts all changes:',
+    code: '.\\opencode-privacy-fix.exe uninstall'
+  },
+  'status-linux-script': {
+    desc: 'Shows whether the privacy fix is currently active:',
+    code: './opencode-hosts-block.sh status'
+  },
+  'status-windows-script': {
+    desc: 'Shows whether the privacy fix is currently active:',
+    code: '.\\opencode-hosts-block.ps1 status'
+  },
+  'status-linux-binary': {
+    desc: 'Shows whether the privacy fix is currently active:',
+    code: './opencode-privacy-fix status'
+  },
+  'status-windows-binary': {
+    desc: 'Shows whether the privacy fix is currently active:',
+    code: '.\\opencode-privacy-fix.exe status'
+  },
+  'test-linux-script': {
+    desc: 'Verifies all domains are blocked and env vars are set (run in a NEW terminal after install):',
+    code: './opencode-hosts-block.sh test'
+  },
+  'test-windows-script': {
+    desc: 'Verifies all domains are blocked and env vars are set (run in a NEW terminal after install):',
+    code: '.\\opencode-hosts-block.ps1 test'
+  },
+  'test-linux-binary': {
+    desc: 'Verifies all domains are blocked and env vars are set (run in a NEW terminal after install):',
+    code: './opencode-privacy-fix test'
+  },
+  'test-windows-binary': {
+    desc: 'Verifies all domains are blocked and env vars are set (run in a NEW terminal after install):',
+    code: '.\\opencode-privacy-fix.exe test'
+  }
+};
+function setCmd(el, idx, val) {
+  cmdState[idx] = val;
+  el.parentElement.querySelectorAll('.cmd-btn').forEach(function(b){b.classList.remove('active')});
+  el.classList.add('active');
+  renderCmd();
+}
+function renderCmd() {
+  var key = cmdState.join('-');
+  var c = cmds[key];
+  var out = document.getElementById('cmdOut');
+  if (!c) { out.innerHTML = ''; return; }
+  var desc = c.desc.replace(/\(requires[^)]*\)/g, function(m) { return '<span style="color:var(--red)">' + m + '</span>'; });
+  out.innerHTML = '<p class="cmd-desc">' + desc + '</p><pre><code>' + c.code.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</code><button class="cmd-copy" onclick="copyCmd(this)">Copy</button></pre>';
+}
+function copyCmd(btn) {
+  var code = btn.parentElement.querySelector('code').textContent;
+  navigator.clipboard.writeText(code).then(function() {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+  }).catch(function() {
+    var ta = document.createElement('textarea');
+    ta.value = code; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+renderCmd();
+</script>
+
+<hr>
+<h2 id="what">What it does</h2>
+<div class="callout tip"><strong>Tip:</strong> Two things happen when you run <code>install</code>. Both persist across reboots. Both are fully reversible with <code>uninstall</code>.</div>
+<ol>
+  <li><strong>Hosts file</strong> — blocks 7 telemetry domains at OS level</li>
+  <li><strong>Environment variables</strong> — sets 3 flags permanently in your shell profile (Linux) or User Environment (Windows)</li>
+</ol>
+<p>No wrappers, no aliases. You keep running <code>opencode</code> exactly as before.</p>
+
+<details>
+  <summary>1. Hosts file entries added</summary>
+  <div class="content">
+    <p>Appended to <code>/etc/hosts</code> (Linux) or <code>C:\Windows\System32\drivers\etc\hosts</code> (Windows):</p>
+    <pre><code># &gt;&gt;&gt; opencode-privacy-block BEGIN &gt;&gt;&gt;
+127.0.0.1 app.opencode.ai
+127.0.0.1 models.dev
+127.0.0.1 opncd.ai
+127.0.0.1 api.opencode.ai
+127.0.0.1 opencode.ai
+127.0.0.1 us.i.posthog.com
+127.0.0.1 api.honeycomb.io
+# &lt;&lt;&lt; opencode-privacy-block END &lt;&lt;&lt;</code></pre>
+    <details class="L2">
+      <summary>What each domain does (click to expand all 7)</summary>
+      <div class="content">
+        <details class="L3">
+          <summary><code>app.opencode.ai</code> — Web UI catch-all proxy <span class="badge red">NO DISABLE FLAG</span></summary>
+          <div class="content">
+            <p>Source: <code>server.ts:499-514</code></p>
+            <p>When you run <code>opencode serve</code>, every request that doesn't match an API route is silently forwarded:</p>
+            <pre><code>.all("/*", async (c) =&gt; {
+    const response = await proxy(`https://app.opencode.ai${c.req.path}`, {
+        ...c.req,
+        headers: { ...c.req.raw.headers, host: "app.opencode.ai" },
+    })
+})</code></pre>
+            <p><strong>When it fires:</strong> On every page load of the web UI — HTML, JS, CSS, fonts, images. Even if your LLM is fully local.</p>
+            <p><strong>Leaked:</strong> Your IP, your operating system (via User-Agent header), all request headers, full URL path (may contain project names).</p>
+            <p><strong>NOT leaked:</strong> Prompts and LLM responses — handled by API routes registered <em>before</em> this catch-all.</p>
+            <details class="L4">
+              <summary>Why this matters even if prompts aren't leaked</summary>
+              <div class="content">
+                <ul>
+                  <li>Web UI is fetched remotely, not embedded. Developers can change it without a binary update.</li>
+                  <li>Your IP is exposed to OpenCode's CDN on every page load.</li>
+                  <li>Request paths may contain project names.</li>
+                  <li>In air-gapped networks, the web UI fails with a blank page.</li>
+                </ul>
+              </div>
+            </details>
+          </div>
+        </details>
+        <details class="L3">
+          <summary><code>api.opencode.ai</code> — GitHub integration <span class="badge red">NO DISABLE FLAG</span></summary>
+          <div class="content">
+            <p>Source: <code>github.ts:366, 738</code></p>
+            <pre><code>fetch(`https://api.opencode.ai/get_github_app_installation?owner=${app.owner}&amp;repo=${app.repo}`)
+if (!value) return "https://api.opencode.ai"</code></pre>
+            <p><strong>When it fires:</strong> Only with <code>opencode github</code> command. Not during normal chat/TUI.</p>
+            <p><strong>Leaked:</strong> GitHub org name, repo name, and OIDC tokens (OpenID Connect tokens — temporary login credentials that prove your identity. If intercepted, they could be used to act as you for a short time).</p>
+          </div>
+        </details>
+        <details class="L3">
+          <summary><code>opencode.ai</code> — Auto-update <span class="badge green">HAS DISABLE FLAG</span></summary>
+          <div class="content">
+            <p>Source: <code>installation/index.ts:153</code></p>
+            <pre><code>const response = yield* httpOk.execute(HttpClientRequest.get("https://opencode.ai/install"))</code></pre>
+            <p><strong>When it fires:</strong> Periodically in the background, unless <code>OPENCODE_DISABLE_AUTOUPDATE=true</code>.</p>
+            <p><strong>Leaked:</strong> IP, operating system/platform (the endpoint serves platform-specific install scripts, so the request itself reveals your OS), and OpenCode version.</p>
+          </div>
+        </details>
+        <details class="L3">
+          <summary><code>opncd.ai</code> — Session sharing <span class="badge green">HAS DISABLE FLAG</span></summary>
+          <div class="content">
+            <p>Source: <code>share-next.ts:50, 66-112, 191-228</code></p>
+            <p>Subscribes to <strong>every</strong> session/message/part/diff event:</p>
+            <pre><code>Bus.subscribe(Session.Event.Updated, async (evt) =&gt; { await sync(...) })
+Bus.subscribe(MessageV2.Event.Updated, async (evt) =&gt; { await sync(...) })
+Bus.subscribe(MessageV2.Event.PartUpdated, async (evt) =&gt; { await sync(...) })
+Bus.subscribe(Session.Event.Diff, async (evt) =&gt; { await sync(...) })</code></pre>
+            <p>But <code>sync()</code> has a critical gate:</p>
+            <pre><code>async function sync(sessionID, data) {
+    if (disabled) return              // ← exits if OPENCODE_DISABLE_SHARE=true
+    const share = get(sessionID)
+    if (!share) return                // ← exits if no share record exists
+    // ...only then does the HTTP POST happen
+}</code></pre>
+            <details class="L4">
+              <summary>When data is actually sent vs. when it's not</summary>
+              <div class="content">
+                <p><strong>Data IS sent when ALL true:</strong></p>
+                <ol>
+                  <li><code>OPENCODE_DISABLE_SHARE</code> is not <code>true</code></li>
+                  <li>Session has a share record (<code>ShareNext.create()</code> was called)</li>
+                  <li>A session/message/part/diff event fires</li>
+                </ol>
+                <p><strong>Data is NOT sent when ANY true:</strong></p>
+                <ul>
+                  <li><code>OPENCODE_DISABLE_SHARE=true</code> — no bus subscriptions created at all</li>
+                  <li>Session never shared — <code>sync()</code> bails at <code>if (!share) return</code></li>
+                </ul>
+                <p><strong>What is sent:</strong> Full session metadata, complete messages, all parts (tool calls, code), file diffs, model info.</p>
+                <p><strong>Bottom line:</strong> If you never explicitly share a session, no data is actually sent to <code>opncd.ai</code>. However, the code that <em>listens</em> for your activity (every message you send, every file you edit) is still running in the background — it just discards the data instead of sending it. Setting <code>OPENCODE_DISABLE_SHARE=true</code> prevents even that listener code from being activated in the first place, so nothing about your session is ever monitored at all.</p>
+              </div>
+            </details>
+          </div>
+        </details>
+        <details class="L3">
+          <summary><code>models.dev</code> — Model catalog <span class="badge green">HAS DISABLE FLAG</span></summary>
+          <div class="content">
+            <p>Source: <code>models.ts:84-99</code>. Fetches only if local cache AND bundled snapshot both fail.</p>
+            <p><strong>Leaked:</strong> IP and that you're using OpenCode. Does NOT report which model you selected.</p>
+          </div>
+        </details>
+        <details class="L3">
+          <summary><code>us.i.posthog.com</code> — PostHog analytics <span class="badge red">NO DISABLE FLAG</span></summary>
+          <div class="content">
+            <p><strong>What is PostHog:</strong> A product analytics platform that tracks how users interact with software. Companies use it to see which features are popular, where users drop off, and how the product is being used.</p>
+            <p><strong>When it fires:</strong> During normal usage — every time you open OpenCode and interact with it.</p>
+            <p><strong>What is sent:</strong> Which features you use and how often, what buttons/commands you trigger, how long your sessions last, your IP address (which reveals your approximate location), your browser/OS information, and a unique identifier that ties all your activity together over time.</p>
+            <p><strong>Why it matters:</strong> There is no flag to disable this. OpenCode does not inform you that this data collection is happening, and there is no opt-out mechanism in the application itself.</p>
+          </div>
+        </details>
+        <details class="L3">
+          <summary><code>api.honeycomb.io</code> — Honeycomb telemetry <span class="badge red">NO DISABLE FLAG</span></summary>
+          <div class="content">
+            <p><strong>What is Honeycomb:</strong> An observability platform that collects detailed performance traces — records of what your application did, how long each step took, and what happened when things went wrong.</p>
+            <p><strong>When it fires:</strong> During normal usage — continuously in the background while OpenCode is running.</p>
+            <p><strong>What is sent:</strong> Detailed timing traces of internal operations (how long tool calls, LLM requests, and file operations take), error messages and stack traces when something fails, your IP address (which reveals your approximate geographic location), and metadata about your environment (OS, runtime version).</p>
+            <p><strong>Why it matters:</strong> There is no flag to disable this. The traces may contain information about your project structure (file paths in error messages) and your workflow patterns. Like PostHog, this runs silently with no user notification or opt-out.</p>
+          </div>
+        </details>
+      </div>
+    </details>
+  </div>
+</details>
+
+<details>
+  <summary>2. Environment variables set</summary>
+  <div class="content">
+    <p>Written permanently to <code>~/.bashrc</code> / <code>~/.zshrc</code> (Linux) or User Environment (Windows):</p>
+    <pre><code>OPENCODE_DISABLE_AUTOUPDATE=true
+OPENCODE_DISABLE_SHARE=true
+OPENCODE_DISABLE_MODELS_FETCH=true</code></pre>
+    <details class="L2">
+      <summary>What each variable does</summary>
+      <div class="content">
+        <table>
+          <thead><tr><th>Variable</th><th>Effect</th><th>Blocks</th></tr></thead>
+          <tbody>
+            <tr><td><code>OPENCODE_DISABLE_AUTOUPDATE=true</code></td><td>Stops update checks</td><td><code>opencode.ai/install</code></td></tr>
+            <tr><td><code>OPENCODE_DISABLE_SHARE=true</code></td><td>Stops session sync</td><td><code>opncd.ai</code></td></tr>
+            <tr><td><code>OPENCODE_DISABLE_MODELS_FETCH=true</code></td><td>Uses bundled catalog</td><td><code>models.dev/api.json</code></td></tr>
+          </tbody>
+        </table>
+        <p>Some of these flags appear in OpenCode's CLI docs (<code>packages/web/src/content/docs/cli.mdx</code>), but with <strong>no privacy context</strong> — their descriptions say things like "Disable automatic update checks" without mentioning that it contacts <code>opencode.ai</code> and leaks your IP and operating system. <code>OPENCODE_DISABLE_SHARE</code> is <strong>missing from the docs entirely</strong>. There is no privacy policy, no telemetry disclosure page, and no network documentation anywhere in the project.</p>
+        <p>Some telemetry domains (like <code>app.opencode.ai</code> and <code>api.opencode.ai</code>) have <strong>no flag at all</strong> — the only way to block them is through the hosts file. The environment variables handle the domains that <em>do</em> have flags. Together, the hosts file + environment variables cover every known outbound connection.</p>
+      </div>
+    </details>
+  </div>
+</details>
+
+<hr>
+<h2 id="exa">Why <code>mcp.exa.ai</code> is not blocked</h2>
+<div class="callout danger"><strong>Caution:</strong> OpenCode's built-in <code>websearch</code> and <code>codesearch</code> tools send queries to <code>mcp.exa.ai/mcp</code> with <strong>no API key and no authentication</strong> — suggesting a partnership or free-tier deal between OpenCode and Exa.</div>
+<p>These tools are enabled when <code>OPENCODE_ENABLE_EXA=true</code> is set <strong>or</strong> when using OpenCode Zen as your provider (auto-enabled, no flag needed). If you use any other provider and haven't set the flag, they don't fire.</p>
+<p>If you configure Exa as a <strong>remote MCP server</strong> in <code>opencode.json</code> (using your own API key), that also hits <code>mcp.exa.ai</code>. Blocking the domain would break your own MCP usage — DNS can't distinguish between the two.</p>
+<div class="callout note"><strong>Note:</strong> If you don't use Exa at all, add <code>127.0.0.1 mcp.exa.ai</code> to your hosts file manually.</div>
+
+<hr>
+<h2 id="why">Why this exists</h2>
+<p>OpenCode contacts 7+ undisclosed external domains during normal use. 7 issues and 12 PRs have been filed by the community over 3+ months — zero merged. This page documents every concern with source code evidence and provides a workaround. See the <a href="https://www.reddit.com/r/LocalLLaMA/comments/1rv690j/opencode_concerns_not_truely_local/">original Reddit discussion</a>.</p>
+
+<hr>
+<h2 id="poll">Community Poll</h2>
+
+<div class="poll">
+  <h3>How should OpenCode handle telemetry and outbound connections?</h3>
+  <p class="poll-q">Vote by reacting on the GitHub Discussion — each GitHub account gets one vote. Pick the option closest to your view.</p>
+  <div class="poll-options">
+    <div class="poll-row">
+      <div class="poll-bar-bg">
+        <div class="poll-bar-fill optin" id="pollOptinBar" style="width:0%"></div>
+        <div class="poll-bar-label"><span>&#128640; All telemetry should be opt-in — nothing sent without explicit consent</span><span class="poll-count" id="pollOptin">—</span></div>
+      </div>
+    </div>
+    <div class="poll-row">
+      <div class="poll-bar-bg">
+        <div class="poll-bar-fill disclose" id="pollDiscloseBar" style="width:0%"></div>
+        <div class="poll-bar-label"><span>&#128077; Telemetry is OK but must be disclosed upfront with a clear opt-out</span><span class="poll-count" id="pollDisclose">—</span></div>
+      </div>
+    </div>
+    <div class="poll-row">
+      <div class="poll-bar-bg">
+        <div class="poll-bar-fill anon" id="pollAnonBar" style="width:0%"></div>
+        <div class="poll-bar-label"><span>&#128064; Anonymous crash/usage analytics are fine, but session data must be opt-in</span><span class="poll-count" id="pollAnon">—</span></div>
+      </div>
+    </div>
+    <div class="poll-row">
+      <div class="poll-bar-bg">
+        <div class="poll-bar-fill unsure" id="pollUnsureBar" style="width:0%"></div>
+        <div class="poll-bar-label"><span>&#128533; Need more information before deciding</span><span class="poll-count" id="pollUnsure">—</span></div>
+      </div>
+    </div>
+    <div class="poll-row">
+      <div class="poll-bar-bg">
+        <div class="poll-bar-fill fine" id="pollFineBar" style="width:0%"></div>
+        <div class="poll-bar-label"><span>&#128078; Current defaults are acceptable, no changes needed</span><span class="poll-count" id="pollFine">—</span></div>
+      </div>
+    </div>
+  </div>
+  <a class="poll-vote-link" id="pollLink" href="https://github.com/VooDisss/opencode-privacy-fix/discussions/1" target="_blank">Vote on GitHub Discussion →</a>
+  <p class="poll-footer" id="pollFooter">Votes are GitHub Discussion reactions: <strong>&#128640;</strong> = All opt-in, <strong>&#128077;</strong> = Disclose + opt-out, <strong>&#128064;</strong> = Anon OK / session data opt-in, <strong>&#128533;</strong> = Unsure, <strong>&#128078;</strong> = Current is fine. One reaction per GitHub account. Results update on page load.</p>
+</div>
+
+<script>
+(function() {
+  function update(optin, disclose, anon, unsure, fine) {
+    var total = optin + disclose + anon + unsure + fine || 1;
+    document.getElementById('pollOptin').textContent = optin;
+    document.getElementById('pollDisclose').textContent = disclose;
+    document.getElementById('pollAnon').textContent = anon;
+    document.getElementById('pollUnsure').textContent = unsure;
+    document.getElementById('pollFine').textContent = fine;
+    document.getElementById('pollOptinBar').style.width = (optin / total * 100) + '%';
+    document.getElementById('pollDiscloseBar').style.width = (disclose / total * 100) + '%';
+    document.getElementById('pollAnonBar').style.width = (anon / total * 100) + '%';
+    document.getElementById('pollUnsureBar').style.width = (unsure / total * 100) + '%';
+    document.getElementById('pollFineBar').style.width = (fine / total * 100) + '%';
+    document.getElementById('pollFooter').textContent = 'Live results from GitHub Discussion #1. One reaction per GitHub account.';
+  }
+
+  function parseGiscus(data) {
+    if (!data.discussion || !data.discussion.reactions) return false;
+    var r = data.discussion.reactions;
+    update(
+      r.ROCKET ? r.ROCKET.count : 0,
+      r.THUMBS_UP ? r.THUMBS_UP.count : 0,
+      r.EYES ? r.EYES.count : 0,
+      r.CONFUSED ? r.CONFUSED.count : 0,
+      r.THUMBS_DOWN ? r.THUMBS_DOWN.count : 0
+    );
+    if (data.discussion.url) document.getElementById('pollLink').href = data.discussion.url;
+    return true;
+  }
+
+  function showBlocked() {
+    ['pollOptin','pollDisclose','pollAnon','pollUnsure','pollFine'].forEach(function(id) {
+      document.getElementById(id).textContent = '—';
+    });
+    document.getElementById('pollFooter').innerHTML = 'Live results could not be loaded (ad blocker may be blocking the request). <a href="https://github.com/VooDisss/opencode-privacy-fix/discussions/1" target="_blank" style="color:var(--accent)">View live results and vote on GitHub →</a>';
+  }
+
+  // Strategy 1: Same-origin poll.json (written by GitHub Actions every 15 min, never blocked)
+  fetch('poll.json?t=' + Date.now())
+  .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function(data) {
+    update(data.rocket || 0, data.thumbs_up || 0, data.eyes || 0, data.confused || 0, data.thumbs_down || 0);
+  })
+  .catch(function() {
+    // Strategy 2: Giscus API (blocked by some ad blockers)
+    fetch('https://giscus.app/api/discussions?repo=VooDisss/opencode-privacy-fix&term=1&number=1&category=&strict=false&first=1')
+    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(data) { if (!parseGiscus(data)) throw new Error('no data'); })
+    .catch(function() {
+      // Strategy 3: Show helpful message
+      showBlocked();
+    });
+  });
+})();
+</script>
+
+<hr>
+<h2 id="discussion">Discussion</h2>
+<p style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem;">Sign in with GitHub to comment or react. Reactions serve as upvotes/downvotes.</p>
+<script src="https://giscus.app/client.js"
+  data-repo="VooDisss/opencode-privacy-fix"
+  data-repo-id="R_kgDORvukbw"
+
+  data-mapping="number"
+  data-term="2"
+  data-strict="0"
+  data-reactions-enabled="1"
+  data-emit-metadata="0"
+  data-input-position="top"
+  data-theme="dark_dimmed"
+  data-lang="en"
+  data-loading="lazy"
+  crossorigin="anonymous"
+  async>
+</script>
+
+
+<button class="copy-btn" onclick="copyPage()" title="Copy page content for LLM">&#128203;</button>
+<span class="copy-toast" id="copyToast">Copied!</span>
+<script>
+function copyPage() {
+  var skip = ['modal-overlay', 'giscus-frame', 'giscus', 'copy-btn', 'copy-toast'];
+  var clone = document.body.cloneNode(true);
+  skip.forEach(function(cls) {
+    clone.querySelectorAll('.' + cls).forEach(function(el) { el.remove(); });
+  });
+  clone.querySelectorAll('script, style, iframe, button, .poll-vote-link').forEach(function(el) { el.remove(); });
+  clone.querySelectorAll('[id="discussion"]').forEach(function(el) {
+    var sib = el.nextElementSibling;
+    while (sib && sib.tagName !== 'HR' && sib.tagName !== 'H2') {
+      var next = sib.nextElementSibling;
+      sib.remove();
+      sib = next;
+    }
+    el.remove();
+  });
+  var text = clone.innerText.replace(/\n{3,}/g, '\n\n').trim();
+  navigator.clipboard.writeText(text).then(function() {
+    var t = document.getElementById('copyToast');
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 1500);
+  }).catch(function() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    var t = document.getElementById('copyToast');
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 1500);
+  });
+}
+</script>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+<div class="modal-box">
+<button class="modal-close" onclick="closeModal()">✕</button>
+<div id="modalContent"></div>
+</div>
+</div>
+
+<script>
+var concerns = {
+A: '<h2><span class="badge red">NO DISABLE FLAG</span> Concern A: Web UI silently proxies all requests to <code>app.opencode.ai</code></h2>'
++'<h3>What happens</h3>'
++'<p>When you run <code><span class="tip" data-tip="CLI command that starts OpenCode\'s local web server and TUI simultaneously">opencode serve</span></code>, a local web server starts on your machine. Every HTTP request that does not match one of OpenCode\'s internal <span class="tip" data-tip="Internal HTTP endpoints that handle LLM communication, session management, and tool execution — these stay local">API routes</span> is silently forwarded to <code>app.opencode.ai</code> — a server controlled by OpenCode\'s developers (<span class="tip" data-tip="The company behind OpenCode (also known as Anomaly). They control all the servers these connections go to.">AnomalyCo</span>). This includes all the HTML, JavaScript, CSS, fonts, and images that make up the web interface.</p>'
++'<h3>The exact code responsible</h3>'
++'<p>File: <code>packages/opencode/src/server/server.ts</code> lines 499–514</p>'
++'<pre><code>.all("/*", async (c) =&gt; {\n    const path = c.req.path\n    const response = await proxy(`https://app.opencode.ai${path}`, {\n        ...c.req,\n        headers: {\n            ...c.req.raw.headers,\n            host: "app.opencode.ai",\n        },\n    })\n})</code></pre>'
++'<h3>What is leaked</h3>'
++'<h3>Exact data sent (from source code)</h3>'
++'<p>The <code>proxy()</code> call at <code>server.ts:502</code> forwards these fields verbatim:</p>'
++'<ul>'
++'<li><strong>Full URL path</strong> (<code>c.req.path</code>) — e.g., <code>/session/my-project-name</code>, <code>/favicon.ico</code>, <code>/index.html</code></li>'
++'<li><strong>All HTTP request headers</strong> (<code>c.req.raw.headers</code>) including:<ul>'
++'<li><code><span class="tip" data-tip="An HTTP header automatically sent with every web request that identifies your browser, operating system, and version">User-Agent</span></code> — contains your <strong>operating system</strong> name, version, browser, and engine version</li>'
++'<li><code>Accept-Language</code> — reveals your <strong>language preferences</strong></li>'
++'<li><code>Cookie</code> — any cookies set by the domain</li>'
++'<li><code>Referer</code> — the previous page URL</li>'
++'</ul></li>'
++'<li><strong>Your IP address</strong> — visible to the remote server on every request, revealing your approximate <strong>geographic location</strong> and <span class="tip" data-tip="Internet Service Provider — the company providing your internet connection (e.g., Comcast, Vodafone, AT&amp;T)">ISP</span></li>'
++'</ul>'
++'<p>The <code>host</code> header is overwritten to <code>app.opencode.ai</code>, but all other headers pass through unchanged.</p>'
++'<h3>What is NOT leaked</h3>'
++'<p>Your prompts and <span class="tip" data-tip="Large Language Model — the AI model that generates responses (e.g., Claude, GPT, Llama)">LLM</span> responses are <strong>not</strong> sent through this proxy. They are handled by API routes (like <code>/session/*/message</code>) that are registered before the catch-all, so they never fall through to it. The proxy only handles web UI asset requests.</p>'
++'<h3>Why this is a problem</h3>'
++'<p><strong>No disable flag exists.</strong> There is no environment variable, no config option, and no CLI flag to turn this off. The only way to prevent it is to block the domain at your operating system level (which is what our fix does) or to modify the source code.</p>'
++'<p><strong>Remote code execution risk:</strong> Because the web UI is loaded from a remote server on every launch rather than being embedded in the binary, OpenCode\'s developers can change the frontend code you are running without releasing a new version. You have no way to verify that the UI you\'re seeing today is the same one that was audited yesterday.</p>'
++'<p><strong>Air-gapped environments break:</strong> If you\'re on a corporate network or intranet that cannot reach <code>app.opencode.ai</code>, the web UI shows a blank page. The <span class="tip" data-tip="Terminal User Interface — the text-based interface you see when running opencode in a terminal (as opposed to the web UI in a browser)">TUI</span> still works, but the web interface is completely non-functional without internet access.</p>'
++'<h3>Community response</h3>'
++'<p>This is the most-reported privacy concern in the OpenCode repository. 7 issues and 12 PRs have been filed about it since December 2025. Zero have been merged. The most mature fix (PR <a href="https://github.com/anomalyco/opencode/pull/15721">#15721</a> by @BYK) embeds the web UI in the binary and has been tested in air-gapped environments — but has received no maintainer review despite requesting one.</p>',
+
+B: '<h2><span class="badge red">NO DISABLE FLAG</span> Concern B: No single "offline mode" to disable all outbound connections</h2>'
++'<h3>What this means</h3>'
++'<p>OpenCode makes outbound connections to at least 7 different external domains during normal operation. While some of these have individual environment variables to disable them, there is <strong>no single "offline mode"</strong> that turns off all non-essential network activity at once.</p>'
++'<h3>Why it matters</h3>'
++'<p>If you\'re using OpenCode with a fully local <span class="tip" data-tip="Large Language Model — the AI model that generates responses (e.g., Claude, GPT, Llama)">LLM</span> (like <span class="tip" data-tip="A tool that lets you run AI models locally on your own computer, without sending data to the cloud">Ollama</span> or <span class="tip" data-tip="An open-source tool for running AI models locally with high performance on consumer hardware">llama.cpp</span>), you likely expect that your data stays on your machine. But without an offline mode, OpenCode still contacts external servers for analytics, model catalogs, auto-updates, and the web UI — even though none of these are needed for local inference.</p>'
++'<p>Users in <span class="tip" data-tip="A network with no connection to the internet, used in high-security, military, or classified environments">air-gapped</span>, classified, or privacy-sensitive environments need a guarantee that no data leaves their machine. Currently, that requires setting 3+ separate environment variables and blocking domains at the OS level — there\'s no built-in way to say "just work offline."</p>'
++'<h3>Community response</h3>'
++'<p>PR <a href="https://github.com/anomalyco/opencode/pull/18235">#18235</a> by @dgruzd adds an <code>OPENCODE_OFFLINE=true</code> / <code>--offline</code> flag that disables auto-update, session sharing, and makes the web proxy return 503. A maintainer (<a href="https://github.com/rekram1-node">@rekram1-node</a>) acknowledged it on March 20, 2026, saying "We ofc need to ship something with this shape" — but no follow-up has occurred since.</p>',
+
+C: '<h2><span class="badge green">HAS FLAG</span> Concern C: Model catalog fetched from <code>models.dev</code>, leaking your IP and OpenCode version</h2>'
++'<h3>What happens</h3>'
++'<p>On startup, OpenCode tries to download a model catalog (a JSON file listing all available AI models) from <code>models.dev</code> — a domain owned by AnomalyCo, the same company behind OpenCode.</p>'
++'<h3>The fallback chain</h3>'
++'<p>The code tries these sources in order:</p>'
++'<ol><li>A local cached file on your disk</li><li>A snapshot bundled inside the OpenCode binary</li><li>Check the <code>OPENCODE_DISABLE_MODELS_FETCH</code> flag (if set, stop here)</li><li>Fetch from <code>https://models.dev/api.json</code> over the internet</li></ol>'
++'<p>Note that the disable flag is only checked at step 3 — after the local options fail. In practice, the bundled snapshot usually exists, so the fetch rarely happens. But if it does, your IP is exposed.</p>'
++'<h3>Exact data sent (from source code)</h3>'
++'<p>The <code>fetch()</code> at <code>models.ts:97</code> and the periodic <code>refresh()</code> at <code>models.ts:107</code> send:</p>'
++'<ul><li>HTTP GET to <code>https://models.dev/api.json</code></li>'
++'<li><code>User-Agent</code> header: <code>opencode/${CHANNEL}/${VERSION}/${CLIENT}</code> (from <code>installation/index.ts:65</code>) — reveals your <strong>OpenCode version, release channel, and client type</strong></li>'
++'<li>Your <strong>IP address</strong> (inherent to the HTTP request) — reveals approximate location and ISP</li>'
++'<li>The <code>refresh()</code> function runs on a <strong>periodic interval</strong> (<code>models.ts:124-129</code>), so your IP is leaked repeatedly, not just once</li></ul>'
++'<p>This is a one-way download — OpenCode receives the catalog from <code>models.dev</code>. Your configured models, selected model, and usage data are <strong>not</strong> uploaded in this request. However, the specific model you use per-message <em>is</em> sent to <code>opncd.ai</code> via session sharing (see Concern D) — including your provider\'s API URL, which could reveal private infrastructure.</p>'
++'<h3>How to disable</h3>'
++'<p>Set <code>OPENCODE_DISABLE_MODELS_FETCH=true</code> in your environment. This flag exists in the source code but is completely undocumented — there is no mention of it in OpenCode\'s docs, README, or help output. Our fix sets this flag automatically.</p>',
+
+D: '<h2><span class="badge green">HAS FLAG</span> Concern D: Session data (prompts, files, diffs, tool calls) synced to <code>opncd.ai</code></h2>'
++'<h3>What happens</h3>'
++'<p>OpenCode has a <span class="tip" data-tip="A conversation with OpenCode — includes all your prompts, AI responses, tool calls, and file changes">session</span> sharing feature that syncs your conversation data to <code>opncd.ai</code> — a server run by <span class="tip" data-tip="The company behind OpenCode (also known as Anomaly). They control all the servers these connections go to.">AnomalyCo</span>. When active, it monitors every session update, every message you send or receive, every tool call result, and every file diff, and sends them to the remote server.</p>'
++'<h3>When data is actually sent</h3>'
++'<p>The sharing code sets up <span class="tip" data-tip="Internal event watchers that monitor every action in your session — messages sent, files edited, tools called. They fire on every event whether or not data is actually uploaded.">listeners</span> on <strong>every</strong> event in your session. However, the actual HTTP upload only happens when <strong>both</strong> of these are true:</p>'
++'<ol><li><code>OPENCODE_DISABLE_SHARE</code> is not set to <code>true</code></li><li>The session has a share record (i.e., <code>ShareNext.create()</code> was called for that session)</li></ol>'
++'<h3>What triggers <code>ShareNext.create()</code></h3>'
++'<p>This is the critical detail. A share record is created via <code>Session.share()</code> (<code>session/index.ts:353-367</code>), which is called by <strong>5 different paths</strong>:</p>'
++'<ol>'
++'<li><strong>Auto-share on session creation</strong> (<code>session/index.ts:330-331</code>) — If <code>OPENCODE_AUTO_SHARE=true</code> or <code>config.share === "auto"</code>, <code>Session.share()</code> is called <strong>automatically on every new session you create</strong>. You never click "share" — it just happens silently.</li>'
++'<li><strong>Web UI "Share" button</strong> (<code>server/routes/session.ts:412</code>) — POST <code>/session/:id/share</code></li>'
++'<li><strong>TUI keyboard shortcut</strong> (<code>cli/cmd/tui/event.ts:15</code>) — the "session.share" keybinding</li>'
++'<li><strong>CLI <code>--share</code> flag</strong> (<code>cli/cmd/run.ts:399-400</code>) — <code>opencode run --share</code>, or automatically if <code>config.share === "auto"</code></li>'
++'<li><strong>GitHub integration</strong> (<code>cli/cmd/github.ts:562</code>) — auto-shares on <strong>public repos</strong> during <code><span class="tip" data-tip="CLI command that integrates OpenCode with GitHub Actions — enables automated code review on issues and pull requests. When run, it creates a session and can auto-share it.">opencode github</span></code> runs (skipped if repo is private)</li>'
++'</ol>'
++'<p><strong>Good news:</strong> Auto-share is <strong>opt-in</strong>. By default, <code>config.share</code> is unset (<code>undefined</code>) and <code>OPENCODE_AUTO_SHARE</code> is not set. The auto-share check (<code>cfg.share === "auto"</code>) only triggers on the exact string <code>"auto"</code> — not on <code>"manual"</code>, <code>"disabled"</code>, or <code>undefined</code>. So out of the box, no sessions are auto-shared.</p>'
++'<p><strong>The concern:</strong> If a user sets <code>OPENCODE_AUTO_SHARE=true</code> or <code>"share": "auto"</code> in their config — which the docs describe only as "Share newly created sessions automatically" with <strong>no mention of what data is sent or where</strong> — the safety gate is bypassed. A share record is auto-created for <strong>every session</strong>, and all data listed below starts syncing to <code>opncd.ai</code> immediately. The GitHub integration (path 5) also auto-shares on public repos without any flag.</p>'
++'<p>If you never trigger any of these 5 paths, no data is sent. But the <span class="tip" data-tip="Internal event watchers that monitor every action in your session — messages sent, files edited, tools called. They fire on every event whether or not data is actually uploaded.">listener code</span> that watches your activity is still running in the background — it just discards the data instead of uploading it.</p>'
++'<h3>Exact data sent (from <span class="tip" data-tip="The SDK type definitions file that defines the exact shape of every data object OpenCode uses — we traced the fields from here">SDK types</span> in <code>types.gen.ts</code>)</h3>'
++'<p>The <code>sync()</code> function at <code>share-next.ts:214</code> POSTs a JSON body containing <code>{ secret, data }</code> where <code>data</code> is an array of the following types:</p>'
++'<p><strong>type: "session"</strong> — the <code>Session</code> object:</p>'
++'<ul><li><code>id</code>, <code>slug</code>, <code>projectID</code> — session identifiers</li>'
++'<li><code>directory</code> — <strong>your full project directory path</strong> (e.g., <code>/home/user/my-secret-project</code>)</li>'
++'<li><code>title</code> — the session title (often derived from your first prompt)</li>'
++'<li><code>version</code> — OpenCode version</li>'
++'<li><code>time.created</code>, <code>time.updated</code> — timestamps</li>'
++'<li><code>summary.diffs[]</code> — array of file diffs including <strong>file paths, before/after content, additions/deletions</strong></li></ul>'
++'<p><strong>type: "message"</strong> — your prompts and LLM responses:</p>'
++'<ul><li><code>UserMessage</code>: <code>agent</code>, <code>model.providerID</code>, <code>model.modelID</code>, <code>system</code> (<strong>your full system prompt</strong>), <code>tools</code> (which tools are enabled)</li>'
++'<li><code>AssistantMessage</code>: <code>path.cwd</code> and <code>path.root</code> (<strong>your working directory and project root paths</strong>), <code>modelID</code>, <code>providerID</code>, <code>cost</code>, <code>tokens</code> (input/output/reasoning/cache counts), <code>finish</code> reason</li></ul>'
++'<p><strong>type: "part"</strong> — individual content blocks within messages:</p>'
++'<ul><li><code>TextPart</code>: <code>text</code> — <strong>the full text of what the LLM wrote</strong></li>'
++'<li><code>ToolPart</code>: <code>tool</code> (tool name), <code>state.input</code> (<strong>tool call arguments — e.g., file paths, bash commands, search queries</strong>), <code>state.output</code> (<strong>tool results — e.g., file contents, command output</strong>)</li>'
++'<li><code>FilePart</code>: <code>url</code>, <code>mime</code>, <code>source.path</code> (<strong>file paths from your project</strong>), <code>source.text.value</code> (<strong>file content excerpts</strong>)</li>'
++'<li><code>SubtaskPart</code>: <code>prompt</code> (<strong>the sub-agent prompt</strong>), <code>description</code>, <code>agent</code></li></ul>'
++'<p><strong>type: "session_diff"</strong> — file changes:</p>'
++'<ul><li><code>file</code> — <strong>the file path that was changed</strong></li>'
++'<li><code>before</code> — <strong>the complete file content before the change</strong></li>'
++'<li><code>after</code> — <strong>the complete file content after the change</strong></li>'
++'<li><code>additions</code>, <code>deletions</code> — line counts</li></ul>'
++'<p><strong>type: "model"</strong> — which AI model you\'re using:</p>'
++'<ul><li><code>id</code>, <code>providerID</code>, <code>api.id</code>, <code>api.url</code> (<strong>your provider API endpoint</strong>), <code>name</code>, <code>capabilities</code></li></ul>'
++'<p><strong>In summary:</strong> When session sharing is active, OpenCode sends your project directory path, full file contents (before and after edits), every prompt you type, every LLM response, every tool call with its arguments and output, your system prompt, and which AI model/provider you use — all to <code>opncd.ai</code>.</p>'
++'<h3>How to disable</h3>'
++'<p>Set <code>OPENCODE_DISABLE_SHARE=true</code>. This prevents even the listener code from starting — your session activity is never monitored at all. Our fix sets this flag automatically.</p>',
+
+E: '<h2><span class="badge green">OPT-IN</span> Concern E: Search queries forwarded to third-party <code>mcp.exa.ai</code> with no authentication</h2>'
++'<h3>What happens</h3>'
++'<p>OpenCode has built-in web search (<code>websearch.ts</code>) and code search (<code>codesearch.ts</code>) tools that forward your queries to <code>mcp.exa.ai</code> — a third-party search service run by Exa.</p>'
++'<h3>Exact data sent (from source code)</h3>'
++'<p>Both tools send a <span class="tip" data-tip="JSON Remote Procedure Call — a protocol for calling functions on a remote server by sending JSON over HTTP">JSON-RPC</span> POST to <code>https://mcp.exa.ai/mcp</code> containing:</p>'
++'<ul><li><code>method: "tools/call"</code></li>'
++'<li><code>params.arguments.query</code> — <strong>your full search query text</strong></li>'
++'<li><code>params.arguments.numResults</code> — number of results requested (default 8)</li>'
++'<li>Your <strong>IP address</strong> (inherent to the HTTP request)</li>'
++'<li><strong>No API key, no authentication token, no authorization header</strong></li></ul>'
++'<h3>The unusual part</h3>'
++'<p>Most search APIs require a paid API key, but OpenCode sends these requests with zero authentication. This strongly suggests a partnership or free-tier arrangement between AnomalyCo and Exa — your search queries may be part of the deal.</p>'
++'<h3>When are these tools active?</h3>'
++'<p>The gating logic in <code>registry.ts:166-167</code>:</p>'
++'<pre><code>if (tool.id === "codesearch" || tool.id === "websearch") {\n    return model.providerID === ProviderID.opencode || Flag.OPENCODE_ENABLE_EXA\n}</code></pre>'
++'<p>The tools are enabled when <strong>either</strong> of these is true:</p>'
++'<ol><li><code>OPENCODE_ENABLE_EXA=true</code> (or <code>OPENCODE_EXPERIMENTAL=true</code>) is explicitly set</li>'
++'<li><strong>OR</strong> you are using <span class="tip" data-tip="OpenCode Zen is AnomalyCo\'s hosted AI provider — a paid service that routes your requests through their infrastructure">OpenCode Zen</span> as your provider (<code>model.providerID === &quot;opencode&quot;</code>)</li></ol>'
++'<p><strong>Key finding:</strong> If you use OpenCode Zen, the Exa search tools are <strong>automatically enabled without any flag or consent</strong>. Your search queries go to a third party (Exa) with no authentication — and you were never asked.</p>'
++'<p>If you use any other provider (Anthropic, OpenAI, Ollama, etc.) and haven\'t set the flag, no queries are sent.</p>'
++'<p>However, if you configure Exa as a remote <span class="tip" data-tip="Model Context Protocol server — a standardized way for AI tools to connect to external data sources and services">MCP server</span> in your <code>opencode.json</code> using your own API key, blocking the domain would also break your intentional usage. That\'s why our fix does not block <code>mcp.exa.ai</code> — we can\'t distinguish between the two at the DNS level.</p>',
+
+F: '<h2><span class="badge green">HAS FLAG</span> Concern F: Auto-update periodically contacts <code>opencode.ai</code>, leaking IP, OS, and version</h2>'
++'<h3>What happens</h3>'
++'<p>OpenCode periodically checks for new versions by fetching an install script from <code>https://opencode.ai/install</code>. This happens automatically in the background while OpenCode is running.</p>'
++'<h3>What is leaked</h3>'
++'<h3>Exact data sent (from source code)</h3>'
++'<p>The <code>HttpClientRequest.get()</code> at <code>installation/index.ts:153</code> sends:</p>'
++'<ul><li>HTTP GET to <code>https://opencode.ai/install</code></li>'
++'<li><code>User-Agent</code> header: <code>opencode/${CHANNEL}/${VERSION}/${CLIENT}</code> — reveals your <strong>OpenCode version and release channel</strong></li>'
++'<li>Your <strong>IP address</strong> — reveals approximate location and ISP</li>'
++'<li>Your <strong>operating system/platform</strong> — the install endpoint serves platform-specific scripts (bash for Linux/macOS, PowerShell for Windows), so the request itself reveals what OS you run</li>'
++'<li>An <code>env: { VERSION: target }</code> is passed to the downloaded script (<code>installation/index.ts:158</code>) — the target version you\'re upgrading to</li></ul>'
++'<p>This tells AnomalyCo that you\'re using OpenCode, when you use it, how often you update, what OS you run, and what version you\'re moving to.</p>'
++'<h3>How to disable</h3>'
++'<p>Set <code>OPENCODE_DISABLE_AUTOUPDATE=true</code> or set <code>autoupdate: false</code> in your config. Our fix sets the environment variable automatically. Note: you\'ll need to update OpenCode manually when you want a new version.</p>',
+
+G: '<h2><span class="badge red">NO DISABLE FLAG</span> Concern G: GitHub org/repo names and login tokens sent to <code>api.opencode.ai</code></h2>'
++'<h3>What happens</h3>'
++'<p>When you use OpenCode\'s GitHub integration (<code><span class="tip" data-tip="CLI command that integrates OpenCode with GitHub Actions — enables automated code review on issues and pull requests. Installs a GitHub App on your repo and sets up workflow files.">opencode github</span></code> command), two calls are made to <code>api.opencode.ai</code> — a server controlled by <span class="tip" data-tip="The company behind OpenCode (also known as Anomaly). They control all the servers these connections go to.">AnomalyCo</span>:</p>'
++'<pre><code>// Your GitHub org and repo names are sent in the URL\nfetch(`https://api.opencode.ai/get_github_app_installation?owner=${app.owner}&amp;repo=${app.repo}`)\n\n// Login token exchange defaults to AnomalyCo\'s server\nif (!value) return "https://api.opencode.ai"</code></pre>'
++'<h3>Exact data sent (from source code)</h3>'
++'<p><strong>GitHub app installation check</strong> (<code>github.ts:365-366</code>):</p>'
++'<ul><li>URL: <code>https://api.opencode.ai/get_github_app_installation?owner=${app.owner}&amp;repo=${app.repo}</code></li>'
++'<li><code>app.owner</code> — <strong>your GitHub organization or username</strong></li>'
++'<li><code>app.repo</code> — <strong>your repository name</strong></li>'
++'<li>Your IP address (inherent to the HTTP request)</li></ul>'
++'<p><strong>OIDC token exchange</strong> (<code>github.ts:736-739</code>):</p>'
++'<ul><li>Default endpoint: <code>https://api.opencode.ai</code></li>'
++'<li><span class="tip" data-tip="OpenID Connect — an identity protocol built on top of OAuth 2.0. OIDC tokens are temporary credentials that a server can use to verify who you are.">OIDC tokens</span> (OpenID Connect) — these are <strong>temporary login credentials that prove your identity</strong>. They\'re exchanged through AnomalyCo\'s server by default. If intercepted or logged server-side, they could potentially be used to act as you for a short time.</li></ul>'
++'<h3>When it fires</h3>'
++'<p>Only when you use the <code>opencode github</code> command. This does <strong>not</strong> fire during normal chat, TUI usage, or web UI usage. If you never use the GitHub integration, this concern doesn\'t apply to you.</p>'
++'<h3>How to partially disable</h3>'
++'<p>The OIDC token exchange path can be redirected by setting <code>OIDC_BASE_URL</code> to your own server. However, the <code>get_github_app_installation</code> call has <strong>no override at all</strong> — there is no environment variable or config option to change or disable it.</p>'
+};
+
+function openModal(key) {
+  document.getElementById('modalContent').innerHTML = concerns[key];
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>
