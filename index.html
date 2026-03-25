@@ -202,7 +202,7 @@ p { margin: 0.5rem 0; }
       <tr><td><code>api.opencode.ai</code></td><td><code>opencode github</code> command</td><td><strong>Yes</strong></td><td>No</td><td><button class="info-btn" onclick="openModal('G')">Learn more ↗</button></td></tr>
       <tr><td><code>opencode.ai</code></td><td>Auto-update check</td><td>No</td><td><strong>Yes</strong> — <code>OPENCODE_DISABLE_AUTOUPDATE</code></td><td><button class="info-btn" onclick="openModal('F')">Learn more ↗</button></td></tr>
       <tr><td><code>opncd.ai</code></td><td>Session sharing</td><td><strong>Yes</strong> — must explicitly share or set <code>"share": "auto"</code></td><td><strong>Yes</strong> — <code>OPENCODE_DISABLE_SHARE</code></td><td><button class="info-btn" onclick="openModal('D')">Learn more ↗</button></td></tr>
-      <tr><td><code>models.dev</code></td><td>Startup (only if local cache + snapshot fail)</td><td>No</td><td><strong>Yes</strong> — <code>OPENCODE_DISABLE_MODELS_FETCH</code></td><td><button class="info-btn" onclick="openModal('C')">Learn more ↗</button></td></tr>
+      <tr><td><code>models.dev</code></td><td>On startup + refreshes hourly</td><td>No</td><td><strong>Yes</strong> — <code>OPENCODE_DISABLE_MODELS_FETCH</code></td><td><button class="info-btn" onclick="openModal('C')">Learn more ↗</button></td></tr>
     </tbody>
   </table>
 
@@ -277,17 +277,39 @@ p { margin: 0.5rem 0; }
 </div>
 
 <hr>
-<h2 id="flags">Official Disable Flags</h2>
-<p>OpenCode provides environment variables to control outbound connections. These are documented in the <a href="https://opencode.ai/docs/cli">CLI docs</a>. Set them in your shell profile or environment to make them permanent.</p>
+<h2 id="flags">Official Controls</h2>
+<p>OpenCode provides both <code>opencode.json</code> config settings and environment variables to control outbound connections. Either method works — config settings go in your project's <code>opencode.json</code>, env vars can be set in your shell profile.</p>
 
 <table>
-  <thead><tr><th>Flag</th><th>What it disables</th><th>Documentation</th></tr></thead>
+  <thead><tr><th>Connection</th><th>Config setting (<code>opencode.json</code>)</th><th>Environment variable</th><th>Documentation</th></tr></thead>
   <tbody>
-    <tr><td><code>OPENCODE_DISABLE_AUTOUPDATE=true</code></td><td>Auto-update checks to <code>opencode.ai</code></td><td><a href="https://opencode.ai/docs/cli">CLI docs</a></td></tr>
-    <tr><td><code>OPENCODE_DISABLE_SHARE=true</code></td><td>Session sharing to <code>opncd.ai</code></td><td><a href="https://opencode.ai/docs/share">Share docs</a></td></tr>
-    <tr><td><code>OPENCODE_DISABLE_MODELS_FETCH=true</code></td><td>Model catalog fetch from <code>models.dev</code></td><td><a href="https://opencode.ai/docs/cli">CLI docs</a></td></tr>
+    <tr>
+      <td>Auto-update<br><code>opencode.ai</code></td>
+      <td><code>"autoupdate": false</code><br>or <code>"autoupdate": "notify"</code> (show notification only)</td>
+      <td><code>OPENCODE_DISABLE_AUTOUPDATE=true</code></td>
+      <td><a href="https://opencode.ai/docs/cli">CLI docs</a></td>
+    </tr>
+    <tr>
+      <td>Session sharing<br><code>opncd.ai</code></td>
+      <td><code>"share": "disabled"</code><br>(options: <code>"manual"</code>, <code>"auto"</code>, <code>"disabled"</code>)</td>
+      <td><code>OPENCODE_DISABLE_SHARE=true</code></td>
+      <td><a href="https://opencode.ai/docs/share">Share docs</a></td>
+    </tr>
+    <tr>
+      <td>Model catalog<br><code>models.dev</code> (hourly)</td>
+      <td>—</td>
+      <td><code>OPENCODE_DISABLE_MODELS_FETCH=true</code></td>
+      <td><a href="https://opencode.ai/docs/cli">CLI docs</a></td>
+    </tr>
   </tbody>
 </table>
+
+<p style="font-size:0.9rem;color:var(--muted);margin-top:0.8rem;"><strong>Example <code>opencode.json</code>:</strong></p>
+<pre><code>{
+  "$schema": "https://opencode.ai/config.json",
+  "autoupdate": false,
+  "share": "disabled"
+}</code></pre>
 
 <hr>
 <h2 id="why">Why this exists</h2>
